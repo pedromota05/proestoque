@@ -1,35 +1,58 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
+import { Platform, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../../src/constants/theme';
+import { WebHeader } from '../../src/components/web/WebHeader';
+import { WebFooter } from '../../src/components/web/WebFooter';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+const isWeb = Platform.OS === 'web';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+export default function TabsLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+    <View style={{ flex: 1 }}>
+      {isWeb && <WebHeader />}
+
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: theme.colors.primary,
+          tabBarInactiveTintColor: theme.colors.textLight,
+          tabBarStyle: isWeb
+            ? { display: 'none' }
+            : {
+                borderTopColor: theme.colors.border,
+                backgroundColor: theme.colors.background,
+                height: 60,
+                paddingBottom: 8,
+                paddingTop: 8,
+              },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '500',
+          },
         }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Home',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="home" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="configuracoes"
+          options={{
+            title: 'Config',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="settings" size={size} color={color} />
+            ),
+          }}
+        />
+      </Tabs>
+
+      {isWeb && <WebFooter />}
+    </View>
   );
 }
