@@ -58,6 +58,7 @@ export default function CadastroScreen() {
                 placeholder="Nome completo"
                 autoCapitalize="words"
                 value={name}
+                style={{ outlineStyle: 'none' as any }}
                 onChangeText={setName}
               />
 
@@ -67,6 +68,7 @@ export default function CadastroScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
+                style={{ outlineStyle: 'none' as any }}
                 onChangeText={setEmail}
               />
 
@@ -75,6 +77,7 @@ export default function CadastroScreen() {
                 placeholder="Senha"
                 isPassword
                 value={password}
+                style={{ outlineStyle: 'none' as any }}
                 onChangeText={setPassword}
               />
 
@@ -83,6 +86,7 @@ export default function CadastroScreen() {
                 placeholder="Confirmar senha"
                 isPassword
                 value={confirmPassword}
+                style={{ outlineStyle: 'none' as any }}
                 onChangeText={setConfirmPassword}
                 error={passwordMismatch ? 'As senhas não coincidem' : undefined}
               />

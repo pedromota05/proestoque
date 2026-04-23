@@ -39,11 +39,13 @@ export function WebFooter() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
+    width: '100%',
+    backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
     paddingVertical: 32,
     paddingHorizontal: 32,
+    marginTop: 15,
   },
   inner: {
     maxWidth: 1200,

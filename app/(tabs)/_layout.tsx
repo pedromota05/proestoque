@@ -1,9 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { Platform, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../src/constants/theme';
 import { WebHeader } from '../../src/components/web/WebHeader';
-import { WebFooter } from '../../src/components/web/WebFooter';
+import { theme } from '../../src/constants/theme';
 
 const isWeb = Platform.OS === 'web';
 
@@ -20,12 +19,12 @@ export default function TabsLayout() {
           tabBarStyle: isWeb
             ? { display: 'none' }
             : {
-                borderTopColor: theme.colors.border,
-                backgroundColor: theme.colors.background,
-                height: 60,
-                paddingBottom: 8,
-                paddingTop: 8,
-              },
+              borderTopColor: theme.colors.border,
+              backgroundColor: theme.colors.background,
+              height: 60,
+              paddingBottom: 8,
+              paddingTop: 8,
+            },
           tabBarLabelStyle: {
             fontSize: 12,
             fontWeight: '500',
@@ -42,6 +41,15 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="produtos"
+          options={{
+            title: 'Produtos',
+            tabBarIcon: ({ color, size, focused }) => (
+              <Ionicons name={focused ? 'folder' : 'folder-outline'} size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="configuracoes"
           options={{
             title: 'Config',
@@ -51,8 +59,6 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
-
-      {isWeb && <WebFooter />}
     </View>
   );
 }

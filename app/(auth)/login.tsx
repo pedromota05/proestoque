@@ -42,6 +42,7 @@ export default function LoginScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
+              style={{ outlineStyle: 'none' as any }}
               onChangeText={setEmail}
             />
 
@@ -50,6 +51,7 @@ export default function LoginScreen() {
               placeholder="Senha"
               isPassword
               value={password}
+              style={{ outlineStyle: 'none' as any }}
               onChangeText={setPassword}
             />
 

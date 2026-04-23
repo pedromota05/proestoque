@@ -4,10 +4,9 @@ import React from 'react';
 import {
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   useWindowDimensions,
-  View,
+  View
 } from 'react-native';
 import { theme } from '../../constants/theme';
 import { LogoProEstoque } from '../LogoProEstoque';
@@ -20,6 +19,7 @@ type NavLink = {
 
 const NAV_LINKS: NavLink[] = [
   { label: 'Home', route: '/(tabs)', icon: 'home-outline' },
+  { label: 'Produtos', route: '/(tabs)/produtos', icon: 'folder-outline' },
   { label: 'Configurações', route: '/(tabs)/configuracoes', icon: 'settings-outline' },
 ];
 
@@ -32,7 +32,6 @@ export function WebHeader() {
   const isDesktop = width >= BREAKPOINT;
 
   const [menuOpen, setMenuOpen] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState('');
 
   return (
     <View style={styles.wrapper}>
@@ -75,23 +74,6 @@ export function WebHeader() {
                 );
               })}
             </View>
-
-            <View style={styles.searchContainer}>
-              <Ionicons
-                name="search-outline"
-                size={18}
-                color={theme.colors.textLight}
-                style={styles.searchIcon}
-              />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Pesquisar..."
-                placeholderTextColor={theme.colors.textLight}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                accessibilityLabel="Campo de pesquisa"
-              />
-            </View>
           </View>
         ) : (
           <TouchableOpacity
@@ -130,23 +112,6 @@ export function WebHeader() {
               <Text style={styles.dropdownText}>{link.label}</Text>
             </TouchableOpacity>
           ))}
-
-          <View style={styles.dropdownSearchContainer}>
-            <Ionicons
-              name="search-outline"
-              size={18}
-              color={theme.colors.textLight}
-              style={styles.searchIcon}
-            />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Pesquisar..."
-              placeholderTextColor={theme.colors.textLight}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              accessibilityLabel="Campo de pesquisa"
-            />
-          </View>
         </View>
       )}
     </View>
@@ -211,27 +176,6 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontWeight: '600',
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 40,
-    width: 220,
-    marginLeft: 8,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: theme.colors.text,
-    outlineStyle: 'none',
-  } as any,
   menuButton: {
     padding: 8,
   },
@@ -256,16 +200,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: theme.colors.text,
-  },
-  dropdownSearchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 42,
-    marginTop: 12,
   },
 });
