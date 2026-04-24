@@ -10,6 +10,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebFooter } from '../../src/components/web/WebFooter';
@@ -73,14 +74,31 @@ const CHIPS: ChipCategoria[] = [
 ];
 
 // ─── Componentes internos ───
-function ProdutoCard({ produto }: { produto: Produto }) {
+function ProdutoCard({
+  produto,
+  layoutColuna = false,
+}: {
+  produto: Produto;
+  layoutColuna?: boolean;
+}) {
   const status = getStatusEstoque(produto);
   const config = STATUS_CONFIG[status];
   const icone = getCategoriaIcone(produto.categoriaId);
 
   return (
-    <View style={styles.produtoCard}>
-      <View style={styles.produtoIconeWrapper}>
+    <View
+      style={[
+        styles.produtoCard,
+        layoutColuna && styles.produtoCardColuna,
+      ]}
+    >
+      <View
+        style={[
+          styles.produtoIconeWrapper,
+          !layoutColuna && styles.iconeRow,
+          layoutColuna && styles.iconeColuna,
+        ]}
+      >
         <Ionicons
           name={icone as keyof typeof Ionicons.glyphMap}
           size={22}
@@ -88,16 +106,32 @@ function ProdutoCard({ produto }: { produto: Produto }) {
         />
       </View>
 
-      <View style={styles.produtoInfo}>
-        <Text style={styles.produtoNome} numberOfLines={1}>
+      <View
+        style={[
+          styles.produtoInfo,
+          layoutColuna && styles.produtoInfoColuna,
+        ]}
+      >
+        <Text
+          style={[styles.produtoNome, layoutColuna && styles.textCenter]}
+          numberOfLines={layoutColuna ? 2 : 1}
+        >
           {produto.nome}
         </Text>
-        <Text style={styles.produtoQtd}>
+        <Text
+          style={[styles.produtoQtd, layoutColuna && styles.textCenter]}
+        >
           {produto.quantidadeEstoque} {produto.unidade}
         </Text>
       </View>
 
-      <View style={[styles.badge, { backgroundColor: config.fundo }]}>
+      <View
+        style={[
+          styles.badge,
+          { backgroundColor: config.fundo },
+          layoutColuna && styles.badgeColuna,
+        ]}
+      >
         <Text style={[styles.badgeText, { color: config.cor }]}>
           {config.label}
         </Text>
@@ -134,6 +168,10 @@ export default function ProdutosScreen() {
   const [modoVisualizacao, setModoVisualizacao] =
     useState<ModoVisualizacao>('grade');
 
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+  const layoutColuna = modoVisualizacao === 'grade' && !isDesktop;
+
   const produtosFiltrados = useMemo(() => {
     const termoNormalizado = busca.trim().toLowerCase();
 
@@ -164,8 +202,10 @@ export default function ProdutosScreen() {
   }, []);
 
   const renderGradeItem = useCallback(
-    ({ item }: { item: Produto }) => <ProdutoCard produto={item} />,
-    [],
+    ({ item }: { item: Produto }) => (
+      <ProdutoCard produto={item} layoutColuna={layoutColuna} />
+    ),
+    [layoutColuna],
   );
 
   const renderAgrupItem = useCallback(
@@ -267,6 +307,7 @@ export default function ProdutosScreen() {
                 ? theme.colors.surface
                 : theme.colors.textLight
             }
+            style={{ marginRight: 6 }}
           />
           <Text
             style={[
@@ -296,6 +337,7 @@ export default function ProdutosScreen() {
                 ? theme.colors.surface
                 : theme.colors.textLight
             }
+            style={{ marginRight: 6 }}
           />
           <Text
             style={[
@@ -493,13 +535,12 @@ const styles = StyleSheet.create({
   },
   toggleRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
+    marginBottom: 24,
   },
   toggleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    marginRight: 8,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 10,
@@ -567,11 +608,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.colors.surface,
     borderRadius: 14,
-    padding: 14,
+    padding: 16,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: theme.colors.border,
     flex: 1,
+  },
+  produtoCardColuna: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 200,
+    padding: 16,
   },
   produtoIconeWrapper: {
     width: 44,
@@ -580,11 +628,22 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconeRow: {
     marginRight: 12,
+  },
+  iconeColuna: {
+    marginBottom: 12,
   },
   produtoInfo: {
     flex: 1,
     marginRight: 8,
+  },
+  produtoInfoColuna: {
+    flex: 1,
+    marginRight: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   produtoNome: {
     fontSize: 15,
@@ -596,10 +655,16 @@ const styles = StyleSheet.create({
     color: theme.colors.textLight,
     marginTop: 2,
   },
+  textCenter: {
+    textAlign: 'center',
+  },
   badge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
+  },
+  badgeColuna: {
+    marginTop: 12,
   },
   badgeText: {
     fontSize: 12,

@@ -58,6 +58,7 @@ export default function RecuperarSenhaScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={email}
+                  style={{ outlineStyle: 'none' as any }}
                   onChangeText={setEmail}
                 />
 
@@ -120,7 +121,6 @@ const styles = StyleSheet.create({
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
     paddingVertical: 8,
   },
   backText: {

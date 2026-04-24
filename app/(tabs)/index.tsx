@@ -259,7 +259,7 @@ export default function HomeScreen() {
                   color={card.corIcone}
                 />
               </View>
-              <Text style={styles.resumoValor}>{card.valor}</Text>
+              <Text style={styles.resumoValor} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>{card.valor}</Text>
               <Text style={styles.resumoTitulo}>{card.titulo}</Text>
             </View>
           </View>
