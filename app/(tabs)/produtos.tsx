@@ -4,6 +4,7 @@ import {
   FlatList,
   Platform,
   RefreshControl,
+  SectionList,
   StyleSheet,
   Text,
   TextInput,
@@ -23,6 +24,8 @@ const isWeb = Platform.OS === 'web';
 
 // ─── Tipos auxiliares ───
 type StatusEstoque = 'normal' | 'baixo' | 'sem_estoque';
+type ModoVisualizacao = 'grade' | 'agrupado';
+type Secao = { title: string; categoriaId: string; data: Produto[] };
 
 interface ChipCategoria {
   id: string | null;
@@ -76,30 +79,28 @@ function ProdutoCard({ produto }: { produto: Produto }) {
   const icone = getCategoriaIcone(produto.categoriaId);
 
   return (
-    <View style={styles.itemWrapper}>
-      <View style={styles.produtoCard}>
-        <View style={styles.produtoIconeWrapper}>
-          <Ionicons
-            name={icone as keyof typeof Ionicons.glyphMap}
-            size={22}
-            color={theme.colors.primary}
-          />
-        </View>
+    <View style={styles.produtoCard}>
+      <View style={styles.produtoIconeWrapper}>
+        <Ionicons
+          name={icone as keyof typeof Ionicons.glyphMap}
+          size={22}
+          color={theme.colors.primary}
+        />
+      </View>
 
-        <View style={styles.produtoInfo}>
-          <Text style={styles.produtoNome} numberOfLines={1}>
-            {produto.nome}
-          </Text>
-          <Text style={styles.produtoQtd}>
-            {produto.quantidadeEstoque} {produto.unidade}
-          </Text>
-        </View>
+      <View style={styles.produtoInfo}>
+        <Text style={styles.produtoNome} numberOfLines={1}>
+          {produto.nome}
+        </Text>
+        <Text style={styles.produtoQtd}>
+          {produto.quantidadeEstoque} {produto.unidade}
+        </Text>
+      </View>
 
-        <View style={[styles.badge, { backgroundColor: config.fundo }]}>
-          <Text style={[styles.badgeText, { color: config.cor }]}>
-            {config.label}
-          </Text>
-        </View>
+      <View style={[styles.badge, { backgroundColor: config.fundo }]}>
+        <Text style={[styles.badgeText, { color: config.cor }]}>
+          {config.label}
+        </Text>
       </View>
     </View>
   );
@@ -130,6 +131,8 @@ export default function ProdutosScreen() {
     string | null
   >(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [modoVisualizacao, setModoVisualizacao] =
+    useState<ModoVisualizacao>('grade');
 
   const produtosFiltrados = useMemo(() => {
     const termoNormalizado = busca.trim().toLowerCase();
@@ -147,13 +150,30 @@ export default function ProdutosScreen() {
     });
   }, [busca, categoriaSelecionada]);
 
+  const secoesAgrupadas = useMemo<Secao[]>(() => {
+    return CATEGORIAS_MOCK.map((cat) => ({
+      title: cat.nome,
+      categoriaId: cat.id,
+      data: produtosFiltrados.filter((p) => p.categoriaId === cat.id),
+    })).filter((secao) => secao.data.length > 0);
+  }, [produtosFiltrados]);
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 1200);
   }, []);
 
-  const renderItem = useCallback(
+  const renderGradeItem = useCallback(
     ({ item }: { item: Produto }) => <ProdutoCard produto={item} />,
+    [],
+  );
+
+  const renderAgrupItem = useCallback(
+    ({ item }: { item: Produto }) => (
+      <View style={styles.itemWrapper}>
+        <ProdutoCard produto={item} />
+      </View>
+    ),
     [],
   );
 
@@ -230,6 +250,66 @@ export default function ProdutosScreen() {
         })}
       </View>
 
+      <View style={styles.toggleRow}>
+        <TouchableOpacity
+          style={[
+            styles.toggleBtn,
+            modoVisualizacao === 'grade' && styles.toggleBtnAtivo,
+          ]}
+          activeOpacity={0.7}
+          onPress={() => setModoVisualizacao('grade')}
+        >
+          <Ionicons
+            name="grid-outline"
+            size={16}
+            color={
+              modoVisualizacao === 'grade'
+                ? theme.colors.surface
+                : theme.colors.textLight
+            }
+          />
+          <Text
+            style={[
+              styles.toggleText,
+              modoVisualizacao === 'grade'
+                ? styles.toggleTextAtivo
+                : styles.toggleTextInativo,
+            ]}
+          >
+            Grade
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.toggleBtn,
+            modoVisualizacao === 'agrupado' && styles.toggleBtnAtivo,
+          ]}
+          activeOpacity={0.7}
+          onPress={() => setModoVisualizacao('agrupado')}
+        >
+          <Ionicons
+            name="list-outline"
+            size={16}
+            color={
+              modoVisualizacao === 'agrupado'
+                ? theme.colors.surface
+                : theme.colors.textLight
+            }
+          />
+          <Text
+            style={[
+              styles.toggleText,
+              modoVisualizacao === 'agrupado'
+                ? styles.toggleTextAtivo
+                : styles.toggleTextInativo,
+            ]}
+          >
+            Agrupado
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.resultadoRow}>
         <Text style={styles.resultadoLabel}>
           {produtosFiltrados.length}{' '}
@@ -239,34 +319,75 @@ export default function ProdutosScreen() {
     </View>
   );
 
+  const webFooter = isWeb ? (
+    <View style={{ flexGrow: 1, justifyContent: 'flex-end' }}>
+      <WebFooter />
+    </View>
+  ) : undefined;
+
+  const refreshCtrl = (
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      tintColor={theme.colors.primary}
+      colors={[theme.colors.primary]}
+    />
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <FlatList
-        style={{ flex: 1 }}
-        data={produtosFiltrados}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        ListHeaderComponent={ListHeader}
-        ListEmptyComponent={ListaVazia}
-        ListFooterComponent={
-          isWeb ? (
-            <View style={{ flexGrow: 1, justifyContent: 'flex-end' }}>
-              <WebFooter />
+      {modoVisualizacao === 'grade' ? (
+        <FlatList
+          style={{ flex: 1 }}
+          data={produtosFiltrados}
+          renderItem={renderGradeItem}
+          keyExtractor={keyExtractor}
+          numColumns={2}
+          columnWrapperStyle={styles.gridRow}
+          ListHeaderComponent={ListHeader}
+          ListEmptyComponent={ListaVazia}
+          ListFooterComponent={webFooter}
+          ListFooterComponentStyle={isWeb ? { flexGrow: 1 } : undefined}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={isWeb}
+          refreshControl={refreshCtrl}
+        />
+      ) : (
+        <SectionList
+          style={{ flex: 1 }}
+          sections={secoesAgrupadas}
+          keyExtractor={keyExtractor}
+          renderItem={renderAgrupItem}
+          renderSectionHeader={({ section }) => (
+            <View style={styles.sectionHeaderWrapper}>
+              <View style={styles.sectionHeader}>
+                <Ionicons
+                  name={
+                    (CATEGORIAS_MOCK.find((c) => c.id === section.categoriaId)
+                      ?.icone ?? 'cube-outline') as keyof typeof Ionicons.glyphMap
+                  }
+                  size={18}
+                  color={theme.colors.primary}
+                />
+                <Text style={styles.sectionTitle}>{section.title}</Text>
+                <View style={styles.sectionBadge}>
+                  <Text style={styles.sectionBadgeText}>
+                    {section.data.length}
+                  </Text>
+                </View>
+              </View>
             </View>
-          ) : undefined
-        }
-        ListFooterComponentStyle={isWeb ? { flexGrow: 1 } : undefined}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={isWeb}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={theme.colors.primary}
-            colors={[theme.colors.primary]}
-          />
-        }
-      />
+          )}
+          ListHeaderComponent={ListHeader}
+          ListEmptyComponent={ListaVazia}
+          ListFooterComponent={webFooter}
+          ListFooterComponentStyle={isWeb ? { flexGrow: 1 } : undefined}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={isWeb}
+          refreshControl={refreshCtrl}
+          stickySectionHeadersEnabled={false}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -279,6 +400,13 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: 0,
     flexGrow: 1,
+  },
+  gridRow: {
+    maxWidth: 1024,
+    width: '100%',
+    alignSelf: 'center',
+    paddingHorizontal: 20,
+    gap: 10,
   },
   itemWrapper: {
     maxWidth: 1024,
@@ -363,6 +491,36 @@ const styles = StyleSheet.create({
   chipTextInativo: {
     color: theme.colors.textLight,
   },
+  toggleRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+  },
+  toggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: 'transparent',
+  },
+  toggleBtnAtivo: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  toggleText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  toggleTextAtivo: {
+    color: theme.colors.surface,
+  },
+  toggleTextInativo: {
+    color: theme.colors.textLight,
+  },
   resultadoRow: {
     marginBottom: 12,
   },
@@ -370,6 +528,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: theme.colors.textLight,
+  },
+  sectionHeaderWrapper: {
+    maxWidth: 1024,
+    width: '100%',
+    alignSelf: 'center',
+    paddingHorizontal: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    marginTop: 8,
+    marginBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  sectionTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.text,
+  },
+  sectionBadge: {
+    backgroundColor: theme.colors.primaryLight,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  sectionBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.colors.primary,
   },
   produtoCard: {
     flexDirection: 'row',
@@ -380,6 +571,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    flex: 1,
   },
   produtoIconeWrapper: {
     width: 44,
