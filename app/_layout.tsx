@@ -5,6 +5,7 @@ import { ActivityIndicator, Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { theme } from '../src/constants/theme';
+import { SplashScreen } from '../src/components/SplashScreen';
 
 function NavigationGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -24,20 +25,7 @@ function NavigationGuard({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, isLoading, segments, router]);
 
   if (isLoading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: theme.colors.background,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-        <ActivityIndicator 
-          size={Platform.OS === 'web' ? 60 : 'large'} 
-          color={theme.colors.primary} 
-        />
-      </View>
-    );
+    return <SplashScreen />;
   }
 
   return <>{children}</>;

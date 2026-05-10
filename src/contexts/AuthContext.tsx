@@ -43,9 +43,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function restoreSession() {
       try {
-        const results = await AsyncStorage.multiGet([
-          STORAGE_KEYS.TOKEN,
-          STORAGE_KEYS.USER,
+        const [results] = await Promise.all([
+          AsyncStorage.multiGet([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER]),
+          new Promise((resolve) => setTimeout(resolve, 1500)),
         ]);
 
         const storedToken = results[0][1];
