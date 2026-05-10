@@ -111,14 +111,3 @@ proestoque/
  ├── assets/                   # Mídia e Fonts (Logo completa, Adaptive Android Icons)
  └── app.json                  # Arquivo de configuração de Build do Expo (Ícones, Splashes, Metadados)
 ```
-
----
-
-## 😉 Desafio Bônus Cumprido!
-
-O **Componente Customizado (`LogoProEstoque`)** foi extraído com sucesso! 
-Inicialmente baseando-se em ícones simplificados, refatoramos o componente inteiro para renderizar nativamente o recurso `assets/images/logo.png`. 
-
-As características mais proeminentes desta implementação:
-- O uso inteligente de uma propriedade **`size`** (`sm`, `md`, `lg`) atrelada a metadados rígidos de dimensão em `width/height`.
-- Retirada de margens atreladas ("*hardcoded magic margins*") para entregar responsabilidade espacial aos contextos pais – as telas. Isto permitiu um alinhamento perfeito do ícone no topo do Web Header, ao mesmo tempo em que dimensionamentos gigantes no Cadastro parecem naturais em conjunto à tela.

@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -13,14 +14,45 @@ import { Button } from '../../src/components/Button';
 import { Input } from '../../src/components/Input';
 import { LogoProEstoque } from '../../src/components/LogoProEstoque';
 import { theme } from '../../src/constants/theme';
+import { useAuth } from '../../src/contexts/AuthContext';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
 
-  const handleLogin = () => {
-    router.replace('/(tabs)');
+  const handleLogin = async () => {
+    let hasError = false;
+
+    if (!email.trim()) {
+      if (Platform.OS === 'web') setEmailError(true);
+      hasError = true;
+    }
+    if (!password.trim()) {
+      if (Platform.OS === 'web') setPasswordError(true);
+      hasError = true;
+    }
+
+    if (hasError) {
+      if (Platform.OS !== 'web') {
+        Alert.alert('Atenção', 'Preencha e-mail e senha.');
+      }
+      return;
+    }
+
+    try {
+      await login(email, password);
+      // Força o redirecionamento explicitamente, ignorando falhas do NavigationGuard na Web
+      router.replace('/(tabs)');
+    } catch (error) {
+      console.error('Erro no login:', error);
+      Platform.OS === 'web'
+        ? window.alert('Erro ao fazer login. Tente novamente.')
+        : Alert.alert('Erro', 'Não foi possível fazer o login.');
+    }
   };
 
   return (
@@ -36,24 +68,42 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.form}>
-            <Input
-              icon="mail-outline"
-              placeholder="E-mail"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              style={{ outlineStyle: 'none' as any }}
-              onChangeText={setEmail}
-            />
+            <View style={styles.inputWrapper}>
+              <Input
+                icon="mail-outline"
+                placeholder="E-mail"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                error={Platform.OS === 'web' && emailError}
+                style={{ outlineStyle: 'none' as any }}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  setEmailError(false);
+                }}
+              />
+              {Platform.OS === 'web' && emailError && (
+                <Text style={styles.errorText}>Preencha o e-mail.</Text>
+              )}
+            </View>
 
-            <Input
-              icon="lock-closed-outline"
-              placeholder="Senha"
-              isPassword
-              value={password}
-              style={{ outlineStyle: 'none' as any }}
-              onChangeText={setPassword}
-            />
+            <View style={styles.inputWrapper}>
+              <Input
+                icon="lock-closed-outline"
+                placeholder="Senha"
+                isPassword
+                value={password}
+                error={Platform.OS === 'web' && passwordError}
+                style={{ outlineStyle: 'none' as any }}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  setPasswordError(false);
+                }}
+              />
+              {Platform.OS === 'web' && passwordError && (
+                <Text style={styles.errorText}>Preencha a senha.</Text>
+              )}
+            </View>
 
             <TouchableOpacity
               onPress={() => router.push('/(auth)/recuperar-senha')}
@@ -63,7 +113,7 @@ export default function LoginScreen() {
               <Text style={styles.forgotText}>Esqueci minha senha</Text>
             </TouchableOpacity>
 
-            <Button title="Entrar" onPress={handleLogin} />
+            <Button title="Entrar" onPress={handleLogin} loading={isLoading} />
           </View>
 
           <View style={styles.footer}>
@@ -142,5 +192,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: theme.colors.primary,
     fontWeight: '600',
+  },
+  inputWrapper: {
+    marginBottom: 8,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: -8,
+    marginBottom: 8,
+    marginLeft: 4,
   },
 });

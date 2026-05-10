@@ -8,10 +8,12 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebFooter } from '../../src/components/web/WebFooter';
 import { theme } from '../../src/constants/theme';
+import { useAuth } from '../../src/contexts/AuthContext';
 import {
   CATEGORIAS_MOCK,
   PRODUTOS_MOCK,
@@ -170,8 +172,20 @@ function AlertaEstoqueCritico({
 }
 
 export default function HomeScreen() {
+  const { user } = useAuth();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const [refreshing, setRefreshing] = useState(false);
   const [mostrarTodosAlertas, setMostrarTodosAlertas] = useState(false);
+
+  const nomeFormatado = user?.nome ? user.nome.charAt(0).toUpperCase() + user.nome.slice(1) : '';
+
+  const saudacao = useMemo(() => {
+    const hora = new Date().getHours();
+    if (hora < 12) return 'Bom dia';
+    if (hora < 18) return 'Boa tarde';
+    return 'Boa noite';
+  }, []);
 
   const produtosBaixoEstoque = useMemo(
     () => getProdutosComEstoqueBaixo(),
@@ -228,20 +242,63 @@ export default function HomeScreen() {
 
   const ListHeader = (
     <View style={styles.headerWrapper}>
-      <View style={styles.greetingRow}>
-        <View style={styles.greetingTexts}>
-          <Text style={styles.greeting}>Olá, Pedro Mota 👋</Text>
-          <Text style={styles.subtitle}>Visão geral do estoque</Text>
+      {isDesktop ? (
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <View>
+            <Text style={styles.greeting}>
+              {saudacao}, {nomeFormatado} 👋
+            </Text>
+            <Text style={styles.subtitle}>Visão geral do estoque</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {user?.nome?.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.addButton}
+              activeOpacity={0.75}
+              accessibilityLabel="Adicionar produto"
+            >
+              <Ionicons name="add" size={26} color={theme.colors.surface} />
+            </TouchableOpacity>
+          </View>
         </View>
+      ) : (
+        <>
+          <View style={styles.greetingRow}>
+            <View style={styles.greetingTexts}>
+              <Text 
+                style={[styles.greeting, { fontSize: 22, lineHeight: 30 }]} 
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+              >
+                {saudacao}, {nomeFormatado} 👋
+              </Text>
+            </View>
 
-        <TouchableOpacity
-          style={styles.addButton}
-          activeOpacity={0.75}
-          accessibilityLabel="Adicionar produto"
-        >
-          <Ionicons name="add" size={26} color={theme.colors.surface} />
-        </TouchableOpacity>
-      </View>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {user?.nome?.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          </View>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 24 }}>
+            <Text style={styles.subtitle}>Visão geral do estoque</Text>
+
+            <TouchableOpacity
+              style={styles.addButton}
+              activeOpacity={0.75}
+              accessibilityLabel="Adicionar produto"
+            >
+              <Ionicons name="add" size={26} color={theme.colors.surface} />
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
 
       <View style={styles.cardsGrid}>
         {resumoCards.map((card) => (
@@ -352,10 +409,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
   },
   greetingTexts: {
     flex: 1,
+    paddingRight: 16,
   },
   greeting: {
     fontSize: 26,
@@ -365,7 +422,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     color: theme.colors.textLight,
-    marginTop: 4,
   },
   addButton: {
     width: 48,
@@ -374,7 +430,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 16,
   },
   cardsGrid: {
     flexDirection: 'row',
@@ -528,6 +583,20 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
+    fontWeight: '700',
+  },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  avatarText: {
+    color: theme.colors.surface,
+    fontSize: 18,
     fontWeight: '700',
   },
 });

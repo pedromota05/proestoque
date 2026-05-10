@@ -12,7 +12,7 @@ import { theme } from '../constants/theme';
 
 interface InputProps extends TextInputProps {
   icon?: React.ComponentProps<typeof Ionicons>['name'];
-  error?: string;
+  error?: string | boolean;
   isPassword?: boolean;
 }
 
@@ -57,7 +57,7 @@ export function Input({ icon, error, isPassword = false, style, ...rest }: Input
         )}
       </View>
 
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {typeof error === 'string' && error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 }
