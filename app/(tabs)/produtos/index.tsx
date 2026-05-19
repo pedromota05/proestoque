@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
@@ -13,13 +14,13 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { WebFooter } from '../../src/components/web/WebFooter';
-import { theme } from '../../src/constants/theme';
+import { WebFooter } from '../../../src/components/web/WebFooter';
+import { theme } from '../../../src/constants/theme';
+import { useProducts } from '../../../src/contexts/ProductsContext';
 import {
   CATEGORIAS_MOCK,
-  PRODUTOS_MOCK,
   type Produto,
-} from '../../src/data/mockData';
+} from '../../../src/data/mockData';
 
 const isWeb = Platform.OS === 'web';
 
@@ -77,16 +78,20 @@ const CHIPS: ChipCategoria[] = [
 function ProdutoCard({
   produto,
   layoutColuna = false,
+  onPress,
 }: {
   produto: Produto;
   layoutColuna?: boolean;
+  onPress?: () => void;
 }) {
   const status = getStatusEstoque(produto);
   const config = STATUS_CONFIG[status];
   const icone = getCategoriaIcone(produto.categoriaId);
 
   return (
-    <View
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onPress}
       style={[
         styles.produtoCard,
         layoutColuna && styles.produtoCardColuna,
@@ -136,7 +141,7 @@ function ProdutoCard({
           {config.label}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -160,6 +165,9 @@ function ListaVazia() {
 
 // ─── Componente principal ───
 export default function ProdutosScreen() {
+  const { produtos } = useProducts();
+  const router = useRouter();
+
   const [busca, setBusca] = useState('');
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<
     string | null
@@ -175,7 +183,7 @@ export default function ProdutosScreen() {
   const produtosFiltrados = useMemo(() => {
     const termoNormalizado = busca.trim().toLowerCase();
 
-    return PRODUTOS_MOCK.filter((p) => {
+    return produtos.filter((p) => {
       const correspondeCategoria =
         categoriaSelecionada === null ||
         p.categoriaId === categoriaSelecionada;
@@ -186,7 +194,7 @@ export default function ProdutosScreen() {
 
       return correspondeCategoria && correspondeBusca;
     });
-  }, [busca, categoriaSelecionada]);
+  }, [busca, categoriaSelecionada, produtos]);
 
   const secoesAgrupadas = useMemo<Secao[]>(() => {
     return CATEGORIAS_MOCK.map((cat) => ({
@@ -203,18 +211,25 @@ export default function ProdutosScreen() {
 
   const renderGradeItem = useCallback(
     ({ item }: { item: Produto }) => (
-      <ProdutoCard produto={item} layoutColuna={layoutColuna} />
+      <ProdutoCard
+        produto={item}
+        layoutColuna={layoutColuna}
+        onPress={() => router.push(`/produtos/${item.id}` as any)}
+      />
     ),
-    [layoutColuna],
+    [layoutColuna, router],
   );
 
   const renderAgrupItem = useCallback(
     ({ item }: { item: Produto }) => (
       <View style={styles.itemWrapper}>
-        <ProdutoCard produto={item} />
+        <ProdutoCard
+          produto={item}
+          onPress={() => router.push(`/produtos/${item.id}` as any)}
+        />
       </View>
     ),
-    [],
+    [router],
   );
 
   const keyExtractor = useCallback((item: Produto) => item.id, []);
@@ -223,13 +238,16 @@ export default function ProdutosScreen() {
     <View style={styles.headerWrapper}>
       <View style={styles.titleRow}>
         <Text style={styles.titulo}>Produtos</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          activeOpacity={0.75}
-          accessibilityLabel="Adicionar produto"
-        >
-          <Ionicons name="add" size={26} color={theme.colors.surface} />
-        </TouchableOpacity>
+        {isWeb && (
+          <TouchableOpacity
+            style={styles.addButton}
+            activeOpacity={0.75}
+            accessibilityLabel="Adicionar produto"
+            onPress={() => router.push('/produtos/novo' as any)}
+          >
+            <Ionicons name="add" size={26} color={theme.colors.surface} />
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.searchContainer}>
@@ -361,11 +379,13 @@ export default function ProdutosScreen() {
     </View>
   );
 
-  const webFooter = isWeb ? (
+  const listFooter = isWeb ? (
     <View style={{ flexGrow: 1, justifyContent: 'flex-end' }}>
       <WebFooter />
     </View>
-  ) : undefined;
+  ) : (
+    <View style={{ height: 80 }} />
+  );
 
   const refreshCtrl = (
     <RefreshControl
@@ -388,7 +408,7 @@ export default function ProdutosScreen() {
           columnWrapperStyle={styles.gridRow}
           ListHeaderComponent={ListHeader}
           ListEmptyComponent={ListaVazia}
-          ListFooterComponent={webFooter}
+          ListFooterComponent={listFooter}
           ListFooterComponentStyle={isWeb ? { flexGrow: 1 } : undefined}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={isWeb}
@@ -422,13 +442,25 @@ export default function ProdutosScreen() {
           )}
           ListHeaderComponent={ListHeader}
           ListEmptyComponent={ListaVazia}
-          ListFooterComponent={webFooter}
+          ListFooterComponent={listFooter}
           ListFooterComponentStyle={isWeb ? { flexGrow: 1 } : undefined}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={isWeb}
           refreshControl={refreshCtrl}
           stickySectionHeadersEnabled={false}
         />
+      )}
+
+      {/* FAB — apenas mobile */}
+      {!isWeb && (
+        <TouchableOpacity
+          style={styles.fab}
+          activeOpacity={0.8}
+          onPress={() => router.push('/produtos/novo' as any)}
+          accessibilityLabel="Adicionar produto"
+        >
+          <Ionicons name="add" size={28} color={theme.colors.surface} />
+        </TouchableOpacity>
       )}
     </SafeAreaView>
   );
@@ -440,7 +472,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   listContent: {
-    paddingBottom: 0,
+    paddingBottom: isWeb ? 0 : 16,
     flexGrow: 1,
   },
   gridRow: {
@@ -688,5 +720,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
     lineHeight: 20,
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
 });

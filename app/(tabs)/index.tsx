@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
@@ -14,9 +15,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebFooter } from '../../src/components/web/WebFooter';
 import { theme } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { useProducts } from '../../src/contexts/ProductsContext';
 import {
   CATEGORIAS_MOCK,
-  PRODUTOS_MOCK,
   formatarPreco,
   getProdutosComEstoqueBaixo,
   getValorTotalEstoque,
@@ -72,11 +73,7 @@ function getCategoriaIcone(categoriaId: string): string {
   );
 }
 
-// ─── Dados derivados ───
-const produtosRecentes = [...PRODUTOS_MOCK].sort(
-  (a, b) =>
-    new Date(b.atualizadoEm).getTime() - new Date(a.atualizadoEm).getTime(),
-);
+
 
 // ─── Componentes internos ───
 function ProdutoCard({ produto }: { produto: Produto }) {
@@ -173,6 +170,8 @@ function AlertaEstoqueCritico({
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { produtos } = useProducts();
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const [refreshing, setRefreshing] = useState(false);
@@ -187,14 +186,23 @@ export default function HomeScreen() {
     return 'Boa noite';
   }, []);
 
+  const produtosRecentes = useMemo(
+    () =>
+      [...produtos].sort(
+        (a, b) =>
+          new Date(b.atualizadoEm).getTime() - new Date(a.atualizadoEm).getTime(),
+      ),
+    [produtos],
+  );
+
   const produtosBaixoEstoque = useMemo(
-    () => getProdutosComEstoqueBaixo(),
-    [],
+    () => getProdutosComEstoqueBaixo(produtos),
+    [produtos],
   );
 
   const totalEstoque = useMemo(
-    () => getValorTotalEstoque(),
-    [],
+    () => getValorTotalEstoque(produtos),
+    [produtos],
   );
 
   const resumoCards: ResumoCard[] = useMemo(
@@ -202,7 +210,7 @@ export default function HomeScreen() {
       {
         id: 'card-produtos',
         titulo: 'Produtos',
-        valor: String(PRODUTOS_MOCK.length),
+        valor: String(produtos.length),
         icone: 'cube-outline' as keyof typeof Ionicons.glyphMap,
         corIcone: theme.colors.primary,
         corFundo: theme.colors.primaryLight,
@@ -260,6 +268,7 @@ export default function HomeScreen() {
               style={styles.addButton}
               activeOpacity={0.75}
               accessibilityLabel="Adicionar produto"
+              onPress={() => router.push('/produtos/novo' as any)}
             >
               <Ionicons name="add" size={26} color={theme.colors.surface} />
             </TouchableOpacity>
@@ -293,6 +302,7 @@ export default function HomeScreen() {
               style={styles.addButton}
               activeOpacity={0.75}
               accessibilityLabel="Adicionar produto"
+              onPress={() => router.push('/produtos/novo' as any)}
             >
               <Ionicons name="add" size={26} color={theme.colors.surface} />
             </TouchableOpacity>

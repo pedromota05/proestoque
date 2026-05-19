@@ -4,8 +4,10 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
+import { ProductsProvider } from '../src/contexts/ProductsContext';
 import { theme } from '../src/constants/theme';
 import { SplashScreen } from '../src/components/SplashScreen';
+import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 
 function NavigationGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -31,6 +33,27 @@ function NavigationGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+const toastConfig = {
+  success: (props: any) => (
+    <BaseToast
+      {...props}
+      style={{ borderLeftColor: theme.colors.accent, height: 'auto', paddingVertical: 12, minHeight: 60 }}
+      contentContainerStyle={{ paddingHorizontal: 15 }}
+      text1Style={{ fontSize: 18, fontWeight: '700', color: theme.colors.text }}
+      text2Style={{ fontSize: 15, color: theme.colors.textLight }}
+    />
+  ),
+  error: (props: any) => (
+    <ErrorToast
+      {...props}
+      style={{ borderLeftColor: theme.colors.error, height: 'auto', paddingVertical: 12, minHeight: 60 }}
+      contentContainerStyle={{ paddingHorizontal: 15 }}
+      text1Style={{ fontSize: 18, fontWeight: '700', color: theme.colors.text }}
+      text2Style={{ fontSize: 15, color: theme.colors.textLight }}
+    />
+  ),
+};
+
 export default function RootLayout() {
   useEffect(() => {
     if (Platform.OS === 'web' && 'serviceWorker' in navigator) {
@@ -45,10 +68,13 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <NavigationGuard>
-          <Stack screenOptions={{ headerShown: false }} />
-        </NavigationGuard>
-        <StatusBar style="dark" />
+        <ProductsProvider>
+          <NavigationGuard>
+            <Stack screenOptions={{ headerShown: false }} />
+          </NavigationGuard>
+          <StatusBar style="dark" />
+          <Toast config={toastConfig} />
+        </ProductsProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

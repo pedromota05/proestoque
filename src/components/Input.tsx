@@ -16,28 +16,50 @@ interface InputProps extends TextInputProps {
   isPassword?: boolean;
 }
 
-export function Input({ icon, error, isPassword = false, style, ...rest }: InputProps) {
+export function Input({ icon, error, isPassword = false, style, multiline, onFocus, onBlur, ...rest }: InputProps) {
   const [isSecure, setIsSecure] = useState(isPassword);
+  const [isFocused, setIsFocused] = useState(false);
 
   const toggleSecure = () => setIsSecure((prev) => !prev);
 
   return (
     <View style={styles.wrapper}>
-      <View style={[styles.container, error ? styles.containerError : null]}>
+      <View
+        style={[
+          styles.container,
+          isFocused && !error && styles.containerFocused,
+          error ? styles.containerError : null,
+          multiline && styles.containerMultiline,
+        ]}
+      >
         {icon && (
           <Ionicons
             name={icon}
             size={20}
-            color={error ? theme.colors.error : theme.colors.textLight}
-            style={styles.icon}
+            color={error ? theme.colors.error : isFocused ? theme.colors.primary : theme.colors.textLight}
+            style={[styles.icon, multiline && { alignSelf: 'flex-start', marginTop: 14 }]}
           />
         )}
 
         <TextInput
-          style={[styles.input, style]}
+          style={[
+            styles.input,
+            { outlineStyle: 'none' as any },
+            multiline && styles.inputMultiline,
+            style,
+          ]}
           placeholderTextColor={theme.colors.textLight}
           secureTextEntry={isSecure}
           accessibilityLabel={rest.placeholder}
+          multiline={multiline}
+          onFocus={(e) => {
+            setIsFocused(true);
+            if (onFocus) onFocus(e);
+          }}
+          onBlur={(e) => {
+            setIsFocused(false);
+            if (onBlur) onBlur(e);
+          }}
           {...rest}
         />
 
@@ -80,6 +102,9 @@ const styles = StyleSheet.create({
   containerError: {
     borderColor: theme.colors.error,
   },
+  containerFocused: {
+    borderColor: theme.colors.primary,
+  },
   icon: {
     marginRight: 10,
   },
@@ -88,6 +113,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: theme.colors.text,
     height: '100%',
+  },
+  containerMultiline: {
+    height: 'auto' as any,
+    minHeight: 100,
+    alignItems: 'flex-start',
+  },
+  inputMultiline: {
+    height: 'auto' as any,
+    minHeight: 80,
+    paddingTop: 14,
+    textAlignVertical: 'top',
   },
   errorText: {
     color: theme.colors.error,
