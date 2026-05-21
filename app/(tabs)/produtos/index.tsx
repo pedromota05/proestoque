@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
+  Image,
   Platform,
   RefreshControl,
   SectionList,
@@ -97,19 +98,30 @@ function ProdutoCard({
         layoutColuna && styles.produtoCardColuna,
       ]}
     >
-      <View
-        style={[
-          styles.produtoIconeWrapper,
-          !layoutColuna && styles.iconeRow,
-          layoutColuna && styles.iconeColuna,
-        ]}
-      >
-        <Ionicons
-          name={icone as keyof typeof Ionicons.glyphMap}
-          size={22}
-          color={theme.colors.primary}
+      {produto.imagemUrl ? (
+        <Image
+          source={{ uri: produto.imagemUrl }}
+          style={[
+            styles.produtoFoto,
+            !layoutColuna && styles.iconeRow,
+            layoutColuna && styles.iconeColuna,
+          ]}
         />
-      </View>
+      ) : (
+        <View
+          style={[
+            styles.produtoIconeWrapper,
+            !layoutColuna && styles.iconeRow,
+            layoutColuna && styles.iconeColuna,
+          ]}
+        >
+          <Ionicons
+            name={icone as keyof typeof Ionicons.glyphMap}
+            size={22}
+            color={theme.colors.primary}
+          />
+        </View>
+      )}
 
       <View
         style={[
@@ -660,6 +672,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  produtoFoto: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
   },
   iconeRow: {
     marginRight: 12,

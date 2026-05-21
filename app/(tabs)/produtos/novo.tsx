@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { ImagePickerField } from '../../../src/components/ImagePickerField';
 import { Input } from '../../../src/components/Input';
 import { Button } from '../../../src/components/Button';
 import { theme } from '../../../src/constants/theme';
@@ -49,6 +50,7 @@ export default function NovoProdutoScreen() {
       preco: 0,
       unidade: 'un',
       observacao: '',
+      foto: undefined,
     },
   });
 
@@ -62,7 +64,7 @@ export default function NovoProdutoScreen() {
         quantidadeEstoque: data.quantidade,
         estoqueMinimo: data.quantidadeMinima,
         unidade: data.unidade,
-        imagemUrl: undefined,
+        imagemUrl: data.foto,
       });
 
       Toast.show({
@@ -96,6 +98,17 @@ export default function NovoProdutoScreen() {
       >
         <View style={styles.formWrapper}>
           <View style={[styles.formContainer, Platform.OS === 'web' && styles.webCard]}>
+          {/* Foto */}
+          <Controller
+            control={control}
+            name="foto"
+            render={({ field: { value, onChange } }) => (
+              <View style={{ alignItems: 'center', marginBottom: 16 }}>
+                <ImagePickerField value={value ?? null} onChange={onChange} />
+              </View>
+            )}
+          />
+
           {/* Nome */}
           <Text style={styles.label}>Nome do produto</Text>
           <Controller

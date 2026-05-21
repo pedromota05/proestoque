@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
+import { ImagePickerField } from '../../../src/components/ImagePickerField';
 import { Input } from '../../../src/components/Input';
 import { Button } from '../../../src/components/Button';
 import { theme } from '../../../src/constants/theme';
@@ -55,6 +56,7 @@ export default function EditarProdutoScreen() {
       preco: 0,
       unidade: 'un',
       observacao: '',
+      foto: undefined,
     },
   });
 
@@ -69,6 +71,7 @@ export default function EditarProdutoScreen() {
         preco: produto.preco,
         unidade: produto.unidade as ProdutoFormData['unidade'],
         observacao: produto.descricao || '',
+        foto: produto.imagemUrl,
       });
       setPrecoTexto(String(produto.preco).replace('.', ','));
     }
@@ -86,6 +89,7 @@ export default function EditarProdutoScreen() {
         quantidadeEstoque: data.quantidade,
         estoqueMinimo: data.quantidadeMinima,
         unidade: data.unidade,
+        imagemUrl: data.foto,
       });
 
       Toast.show({
@@ -174,6 +178,17 @@ export default function EditarProdutoScreen() {
       >
         <View style={styles.formWrapper}>
           <View style={[styles.formContainer, Platform.OS === 'web' && styles.webCard]}>
+          {/* Foto */}
+          <Controller
+            control={control}
+            name="foto"
+            render={({ field: { value, onChange } }) => (
+              <View style={{ alignItems: 'center', marginBottom: 16 }}>
+                <ImagePickerField value={value ?? null} onChange={onChange} />
+              </View>
+            )}
+          />
+
           {/* Nome */}
           <Text style={styles.label}>Nome do produto</Text>
           <Controller
