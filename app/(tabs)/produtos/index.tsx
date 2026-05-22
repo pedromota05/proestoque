@@ -37,8 +37,8 @@ interface ChipCategoria {
 
 // ─── Helpers ───
 function getStatusEstoque(produto: Produto): StatusEstoque {
-  if (produto.quantidadeEstoque === 0) return 'sem_estoque';
-  if (produto.quantidadeEstoque <= produto.estoqueMinimo) return 'baixo';
+  if (produto.quantidade === 0) return 'sem_estoque';
+  if (produto.quantidade <= produto.quantidadeMinima) return 'baixo';
   return 'normal';
 }
 
@@ -98,9 +98,9 @@ function ProdutoCard({
         layoutColuna && styles.produtoCardColuna,
       ]}
     >
-      {produto.imagemUrl ? (
+      {produto.foto ? (
         <Image
-          source={{ uri: produto.imagemUrl }}
+          source={{ uri: produto.foto }}
           style={[
             styles.produtoFoto,
             !layoutColuna && styles.iconeRow,
@@ -138,7 +138,7 @@ function ProdutoCard({
         <Text
           style={[styles.produtoQtd, layoutColuna && styles.textCenter]}
         >
-          {produto.quantidadeEstoque} {produto.unidade}
+          {produto.quantidade} {produto.unidade}
         </Text>
       </View>
 
@@ -177,7 +177,7 @@ function ListaVazia() {
 
 // ─── Componente principal ───
 export default function ProdutosScreen() {
-  const { produtos } = useProducts();
+  const { produtos, recarregar } = useProducts();
   const router = useRouter();
 
   const [busca, setBusca] = useState('');
@@ -216,10 +216,14 @@ export default function ProdutosScreen() {
     })).filter((secao) => secao.data.length > 0);
   }, [produtosFiltrados]);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1200);
-  }, []);
+    try {
+      await recarregar();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [recarregar]);
 
   const renderGradeItem = useCallback(
     ({ item }: { item: Produto }) => (

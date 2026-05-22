@@ -8,13 +8,13 @@ export interface Categoria {
 export interface Produto {
   id: string;
   nome: string;
-  descricao: string;
+  observacao: string;
   categoriaId: string;
   preco: number;
-  quantidadeEstoque: number;
-  estoqueMinimo: number;
+  quantidade: number;
+  quantidadeMinima: number;
   unidade: string;
-  imagemUrl?: string;
+  foto?: string;
   criadoEm: string;
   atualizadoEm: string;
 }
@@ -32,12 +32,12 @@ export interface Movimentacao {
 
 // ─── Categorias Mock ───
 export const CATEGORIAS_MOCK: Categoria[] = [
-  { id: 'cat-1', nome: 'Eletrônicos', icone: 'hardware-chip-outline' },
-  { id: 'cat-2', nome: 'Alimentos', icone: 'fast-food-outline' },
-  { id: 'cat-3', nome: 'Bebidas', icone: 'beer-outline' },
-  { id: 'cat-4', nome: 'Limpeza', icone: 'sparkles-outline' },
-  { id: 'cat-5', nome: 'Papelaria', icone: 'document-text-outline' },
-  { id: 'cat-6', nome: 'Ferramentas', icone: 'construct-outline' },
+  { id: 'cat-eletronicos', nome: 'Eletrônicos', icone: 'hardware-chip-outline' },
+  { id: 'cat-alimentos', nome: 'Alimentos', icone: 'fast-food-outline' },
+  { id: 'cat-bebidas', nome: 'Bebidas', icone: 'beer-outline' },
+  { id: 'cat-limpeza', nome: 'Limpeza', icone: 'sparkles-outline' },
+  { id: 'cat-papelaria', nome: 'Papelaria', icone: 'document-text-outline' },
+  { id: 'cat-ferramentas', nome: 'Ferramentas', icone: 'construct-outline' },
 ];
 
 // ─── Produtos Mock ───
@@ -45,11 +45,11 @@ export const PRODUTOS_MOCK: Produto[] = [
   {
     id: 'prod-1',
     nome: 'Fone Bluetooth',
-    descricao: 'Fone de ouvido sem fio com cancelamento de ruído',
-    categoriaId: 'cat-1',
+    observacao: 'Fone de ouvido sem fio com cancelamento de ruído',
+    categoriaId: 'cat-eletronicos',
     preco: 189.9,
-    quantidadeEstoque: 34,
-    estoqueMinimo: 10,
+    quantidade: 34,
+    quantidadeMinima: 10,
     unidade: 'un',
     criadoEm: '2026-01-10T08:00:00Z',
     atualizadoEm: '2026-04-18T14:30:00Z',
@@ -57,11 +57,11 @@ export const PRODUTOS_MOCK: Produto[] = [
   {
     id: 'prod-2',
     nome: 'Cabo USB-C',
-    descricao: 'Cabo USB-C para USB-A, 1,5 m, trançado',
-    categoriaId: 'cat-1',
+    observacao: 'Cabo USB-C para USB-A, 1,5 m, trançado',
+    categoriaId: 'cat-eletronicos',
     preco: 29.9,
-    quantidadeEstoque: 120,
-    estoqueMinimo: 20,
+    quantidade: 120,
+    quantidadeMinima: 20,
     unidade: 'un',
     criadoEm: '2026-01-12T10:00:00Z',
     atualizadoEm: '2026-04-15T09:00:00Z',
@@ -69,11 +69,11 @@ export const PRODUTOS_MOCK: Produto[] = [
   {
     id: 'prod-3',
     nome: 'Arroz Integral 1kg',
-    descricao: 'Arroz integral tipo 1 — pacote de 1 kg',
-    categoriaId: 'cat-2',
+    observacao: 'Arroz integral tipo 1 — pacote de 1 kg',
+    categoriaId: 'cat-alimentos',
     preco: 8.49,
-    quantidadeEstoque: 3,
-    estoqueMinimo: 15,
+    quantidade: 3,
+    quantidadeMinima: 15,
     unidade: 'pct',
     criadoEm: '2026-02-05T11:00:00Z',
     atualizadoEm: '2026-04-20T16:45:00Z',
@@ -81,11 +81,11 @@ export const PRODUTOS_MOCK: Produto[] = [
   {
     id: 'prod-4',
     nome: 'Café Torrado 500g',
-    descricao: 'Café premium torrado e moído, embalagem a vácuo',
-    categoriaId: 'cat-2',
+    observacao: 'Café premium torrado e moído, embalagem a vácuo',
+    categoriaId: 'cat-alimentos',
     preco: 24.9,
-    quantidadeEstoque: 48,
-    estoqueMinimo: 10,
+    quantidade: 48,
+    quantidadeMinima: 10,
     unidade: 'pct',
     criadoEm: '2026-02-10T09:30:00Z',
     atualizadoEm: '2026-04-19T11:00:00Z',
@@ -93,11 +93,11 @@ export const PRODUTOS_MOCK: Produto[] = [
   {
     id: 'prod-5',
     nome: 'Suco de Laranja 1L',
-    descricao: 'Suco de laranja integral, sem adição de açúcar',
-    categoriaId: 'cat-3',
+    observacao: 'Suco de laranja integral, sem adição de açúcar',
+    categoriaId: 'cat-bebidas',
     preco: 12.5,
-    quantidadeEstoque: 5,
-    estoqueMinimo: 12,
+    quantidade: 5,
+    quantidadeMinima: 12,
     unidade: 'un',
     criadoEm: '2026-03-01T07:00:00Z',
     atualizadoEm: '2026-04-21T08:20:00Z',
@@ -105,11 +105,11 @@ export const PRODUTOS_MOCK: Produto[] = [
   {
     id: 'prod-6',
     nome: 'Detergente 500ml',
-    descricao: 'Detergente neutro concentrado para uso doméstico',
-    categoriaId: 'cat-4',
+    observacao: 'Detergente neutro concentrado para uso doméstico',
+    categoriaId: 'cat-limpeza',
     preco: 3.99,
-    quantidadeEstoque: 72,
-    estoqueMinimo: 20,
+    quantidade: 72,
+    quantidadeMinima: 20,
     unidade: 'un',
     criadoEm: '2026-01-20T14:00:00Z',
     atualizadoEm: '2026-04-10T10:00:00Z',
@@ -117,11 +117,11 @@ export const PRODUTOS_MOCK: Produto[] = [
   {
     id: 'prod-7',
     nome: 'Resma Papel A4',
-    descricao: 'Resma com 500 folhas, papel sulfite 75 g/m²',
-    categoriaId: 'cat-5',
+    observacao: 'Resma com 500 folhas, papel sulfite 75 g/m²',
+    categoriaId: 'cat-papelaria',
     preco: 28.0,
-    quantidadeEstoque: 2,
-    estoqueMinimo: 5,
+    quantidade: 2,
+    quantidadeMinima: 5,
     unidade: 'resma',
     criadoEm: '2026-02-15T13:00:00Z',
     atualizadoEm: '2026-04-22T09:15:00Z',
@@ -129,11 +129,11 @@ export const PRODUTOS_MOCK: Produto[] = [
   {
     id: 'prod-8',
     nome: 'Chave Phillips',
-    descricao: 'Chave de fenda Phillips 3/16″ com cabo ergonômico',
-    categoriaId: 'cat-6',
+    observacao: 'Chave de fenda Phillips 3/16″ com cabo ergonômico',
+    categoriaId: 'cat-ferramentas',
     preco: 14.9,
-    quantidadeEstoque: 18,
-    estoqueMinimo: 5,
+    quantidade: 18,
+    quantidadeMinima: 5,
     unidade: 'un',
     criadoEm: '2026-03-08T15:00:00Z',
     atualizadoEm: '2026-04-17T17:00:00Z',
@@ -141,11 +141,11 @@ export const PRODUTOS_MOCK: Produto[] = [
   {
     id: 'prod-9',
     nome: 'Água Mineral 500ml',
-    descricao: 'Água mineral sem gás, garrafa PET 500 ml',
-    categoriaId: 'cat-3',
+    observacao: 'Água mineral sem gás, garrafa PET 500 ml',
+    categoriaId: 'cat-bebidas',
     preco: 2.5,
-    quantidadeEstoque: 200,
-    estoqueMinimo: 50,
+    quantidade: 200,
+    quantidadeMinima: 50,
     unidade: 'un',
     criadoEm: '2026-03-12T06:00:00Z',
     atualizadoEm: '2026-04-22T07:30:00Z',
@@ -153,11 +153,11 @@ export const PRODUTOS_MOCK: Produto[] = [
   {
     id: 'prod-10',
     nome: 'Mouse Sem Fio',
-    descricao: 'Mouse óptico wireless 1600 DPI, design compacto',
-    categoriaId: 'cat-1',
+    observacao: 'Mouse óptico wireless 1600 DPI, design compacto',
+    categoriaId: 'cat-eletronicos',
     preco: 59.9,
-    quantidadeEstoque: 7,
-    estoqueMinimo: 8,
+    quantidade: 7,
+    quantidadeMinima: 8,
     unidade: 'un',
     criadoEm: '2026-01-25T12:00:00Z',
     atualizadoEm: '2026-04-20T14:00:00Z',
@@ -228,14 +228,14 @@ export const MOVIMENTACOES_MOCK: Movimentacao[] = [
 export function getProdutosComEstoqueBaixo(
   produtos: Produto[] = PRODUTOS_MOCK,
 ): Produto[] {
-  return produtos.filter((p) => p.quantidadeEstoque <= p.estoqueMinimo);
+  return produtos.filter((p) => p.quantidade <= p.quantidadeMinima);
 }
 
 export function getValorTotalEstoque(
   produtos: Produto[] = PRODUTOS_MOCK,
 ): number {
   return produtos.reduce(
-    (total, p) => total + p.preco * p.quantidadeEstoque,
+    (total, p) => total + p.preco * p.quantidade,
     0,
   );
 }

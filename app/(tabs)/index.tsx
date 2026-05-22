@@ -40,8 +40,8 @@ interface ResumoCard {
 
 // ─── Helpers ───
 function getStatusEstoque(produto: Produto): StatusEstoque {
-  if (produto.quantidadeEstoque === 0) return 'sem_estoque';
-  if (produto.quantidadeEstoque <= produto.estoqueMinimo) return 'baixo';
+  if (produto.quantidade === 0) return 'sem_estoque';
+  if (produto.quantidade <= produto.quantidadeMinima) return 'baixo';
   return 'normal';
 }
 
@@ -96,7 +96,7 @@ function ProdutoCard({ produto }: { produto: Produto }) {
           {produto.nome}
         </Text>
         <Text style={styles.produtoQtd}>
-          {produto.quantidadeEstoque} {produto.unidade}
+          {produto.quantidade} {produto.unidade}
         </Text>
       </View>
 
@@ -148,7 +148,7 @@ function AlertaEstoqueCritico({
             {p.nome}
           </Text>
           <Text style={styles.alertaItemQtd}>
-            {p.quantidadeEstoque} / {p.estoqueMinimo}
+            {p.quantidade} / {p.quantidadeMinima}
           </Text>
         </View>
       ))}
@@ -170,7 +170,7 @@ function AlertaEstoqueCritico({
 
 export default function HomeScreen() {
   const { user } = useAuth();
-  const { produtos } = useProducts();
+  const { produtos, recarregar } = useProducts();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
@@ -243,10 +243,14 @@ export default function HomeScreen() {
     [produtosBaixoEstoque, totalEstoque],
   );
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1200);
-  }, []);
+    try {
+      await recarregar();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [recarregar]);
 
   const ListHeader = (
     <View style={styles.headerWrapper}>

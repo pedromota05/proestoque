@@ -54,17 +54,17 @@ export default function NovoProdutoScreen() {
     },
   });
 
-  function onSubmit(data: ProdutoFormData) {
+  async function onSubmit(data: ProdutoFormData) {
     try {
-      adicionarProduto({
+      await adicionarProduto({
         nome: data.nome,
-        descricao: data.observacao ?? '',
+        observacao: data.observacao ?? '',
         categoriaId: data.categoriaId,
         preco: data.preco,
-        quantidadeEstoque: data.quantidade,
-        estoqueMinimo: data.quantidadeMinima,
+        quantidade: data.quantidade,
+        quantidadeMinima: data.quantidadeMinima,
         unidade: data.unidade,
-        imagemUrl: data.foto,
+        foto: data.foto,
       });
 
       Toast.show({

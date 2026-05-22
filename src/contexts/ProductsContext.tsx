@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, {
   createContext,
   useCallback,
@@ -7,10 +6,8 @@ import React, {
   useMemo,
   useReducer,
 } from 'react';
-import { PRODUTOS_MOCK, type Produto } from '../data/mockData';
-
-// ─── Storage key ───
-const STORAGE_KEY = '@proestoque:produtos';
+import { api } from '../services/api';
+import type { Produto } from '../data/mockData';
 
 // ─── Types ───
 interface ProductsState {
@@ -27,10 +24,11 @@ type ProductsAction =
 interface ProductsContextType {
   produtos: Produto[];
   loaded: boolean;
-  adicionarProduto: (data: Omit<Produto, 'id' | 'criadoEm' | 'atualizadoEm'>) => void;
-  editarProduto: (id: string, data: Partial<Omit<Produto, 'id' | 'criadoEm'>>) => void;
-  deletarProduto: (id: string) => void;
+  adicionarProduto: (data: Omit<Produto, 'id' | 'criadoEm' | 'atualizadoEm'>) => Promise<void>;
+  editarProduto: (id: string, data: Partial<Omit<Produto, 'id' | 'criadoEm'>>) => Promise<void>;
+  deletarProduto: (id: string) => Promise<void>;
   getProdutoById: (id: string) => Produto | undefined;
+  recarregar: () => Promise<void>;
 }
 
 // ─── Reducer ───
@@ -61,15 +59,6 @@ function produtosReducer(state: ProductsState, action: ProductsAction): Products
   }
 }
 
-// ─── Persist helper ───
-async function persistProdutos(produtos: Produto[]) {
-  try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(produtos));
-  } catch (error) {
-    console.error('Erro ao persistir produtos:', error);
-  }
-}
-
 // ─── Context ───
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined);
 
@@ -80,77 +69,62 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     loaded: false,
   });
 
-  // Carregar do AsyncStorage na montagem
-  useEffect(() => {
-    async function loadProdutos() {
-      try {
-        const stored = await AsyncStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const parsed: Produto[] = JSON.parse(stored);
-          dispatch({ type: 'LOAD', payload: parsed });
-        } else {
-          // Primeira execução: carrega mock como fallback
-          dispatch({ type: 'LOAD', payload: PRODUTOS_MOCK });
-          await persistProdutos(PRODUTOS_MOCK);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar produtos do storage:', error);
-        dispatch({ type: 'LOAD', payload: PRODUTOS_MOCK });
-      }
+  // Buscar produtos da API na montagem
+  const carregarProdutos = useCallback(async () => {
+    try {
+      const response = await api.get('/produtos');
+      // Extraímos os produtos de response.data.dados devido à paginação
+      const produtosFetch: Produto[] = response.data.dados || response.data;
+      dispatch({ type: 'LOAD', payload: produtosFetch });
+    } catch (error) {
+      console.error('Erro ao carregar produtos da API:', error);
+      // Marca como loaded mesmo em caso de erro para não travar o splash
+      dispatch({ type: 'LOAD', payload: [] });
     }
-
-    loadProdutos();
   }, []);
+
+  useEffect(() => {
+    carregarProdutos();
+  }, [carregarProdutos]);
 
   // ─── Actions ───
   const adicionarProduto = useCallback(
-    (data: Omit<Produto, 'id' | 'criadoEm' | 'atualizadoEm'>) => {
-      const agora = new Date().toISOString();
-      const novoProduto: Produto = {
-        ...data,
-        id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        criadoEm: agora,
-        atualizadoEm: agora,
-      };
-
-      dispatch({ type: 'ADD', payload: novoProduto });
-
-      // Persistir assincronamente
-      const novaLista = [...state.produtos, novoProduto];
-      persistProdutos(novaLista);
+    async (data: Omit<Produto, 'id' | 'criadoEm' | 'atualizadoEm'>) => {
+      try {
+        const response = await api.post('/produtos', data);
+        dispatch({ type: 'ADD', payload: response.data });
+      } catch (error) {
+        console.error('Erro ao adicionar produto:', error);
+        throw error;
+      }
     },
-    [state.produtos],
+    [],
   );
 
   const editarProduto = useCallback(
-    (id: string, data: Partial<Omit<Produto, 'id' | 'criadoEm'>>) => {
-      const existente = state.produtos.find((p) => p.id === id);
-      if (!existente) return;
-
-      const produtoAtualizado: Produto = {
-        ...existente,
-        ...data,
-        atualizadoEm: new Date().toISOString(),
-      };
-
-      dispatch({ type: 'UPDATE', payload: produtoAtualizado });
-
-      const novaLista = state.produtos.map((p) =>
-        p.id === id ? produtoAtualizado : p,
-      );
-      persistProdutos(novaLista);
+    async (id: string, data: Partial<Omit<Produto, 'id' | 'criadoEm'>>) => {
+      try {
+        const response = await api.put(`/produtos/${id}`, data);
+        dispatch({ type: 'UPDATE', payload: response.data });
+      } catch (error) {
+        console.error('Erro ao editar produto:', error);
+        throw error;
+      }
     },
-    [state.produtos],
+    [],
   );
 
   const deletarProduto = useCallback(
-    (id: string) => {
-      dispatch({ type: 'DELETE', payload: id });
-
-      const novaLista = state.produtos.filter((p) => p.id !== id);
-      persistProdutos(novaLista);
+    async (id: string) => {
+      try {
+        await api.delete(`/produtos/${id}`);
+        dispatch({ type: 'DELETE', payload: id });
+      } catch (error) {
+        console.error('Erro ao deletar produto:', error);
+        throw error;
+      }
     },
-    [state.produtos],
+    [],
   );
 
   const getProdutoById = useCallback(
@@ -168,8 +142,9 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
       editarProduto,
       deletarProduto,
       getProdutoById,
+      recarregar: carregarProdutos,
     }),
-    [state.produtos, state.loaded, adicionarProduto, editarProduto, deletarProduto, getProdutoById],
+    [state.produtos, state.loaded, adicionarProduto, editarProduto, deletarProduto, getProdutoById, carregarProdutos],
   );
 
   return (

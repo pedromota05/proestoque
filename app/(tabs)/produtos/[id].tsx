@@ -66,30 +66,30 @@ export default function EditarProdutoScreen() {
       reset({
         nome: produto.nome,
         categoriaId: produto.categoriaId,
-        quantidade: produto.quantidadeEstoque,
-        quantidadeMinima: produto.estoqueMinimo,
+        quantidade: produto.quantidade,
+        quantidadeMinima: produto.quantidadeMinima,
         preco: produto.preco,
         unidade: produto.unidade as ProdutoFormData['unidade'],
-        observacao: produto.descricao || '',
-        foto: produto.imagemUrl,
+        observacao: produto.observacao || '',
+        foto: produto.foto,
       });
       setPrecoTexto(String(produto.preco).replace('.', ','));
     }
   }, [produto, reset]);
 
-  function onSubmit(data: ProdutoFormData) {
+  async function onSubmit(data: ProdutoFormData) {
     if (!id) return;
 
     try {
-      editarProduto(id, {
+      await editarProduto(id, {
         nome: data.nome,
-        descricao: data.observacao ?? '',
+        observacao: data.observacao ?? '',
         categoriaId: data.categoriaId,
         preco: data.preco,
-        quantidadeEstoque: data.quantidade,
-        estoqueMinimo: data.quantidadeMinima,
+        quantidade: data.quantidade,
+        quantidadeMinima: data.quantidadeMinima,
         unidade: data.unidade,
-        imagemUrl: data.foto,
+        foto: data.foto,
       });
 
       Toast.show({
@@ -110,13 +110,13 @@ export default function EditarProdutoScreen() {
     }
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!id) return;
 
     if (Platform.OS === 'web') {
       const confirmar = window.confirm('Tem certeza que deseja excluir este produto?');
       if (confirmar) {
-        deletarProduto(id);
+        await deletarProduto(id);
         Toast.show({
           type: 'success',
           text1: 'Excluído!',
@@ -134,8 +134,8 @@ export default function EditarProdutoScreen() {
           {
             text: 'Excluir',
             style: 'destructive',
-            onPress: () => {
-              deletarProduto(id);
+            onPress: async () => {
+              await deletarProduto(id);
               Toast.show({
                 type: 'success',
                 text1: 'Excluído!',
