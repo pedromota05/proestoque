@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -10,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { Button } from '../../src/components/Button';
 import { Input } from '../../src/components/Input';
 import { LogoProEstoque } from '../../src/components/LogoProEstoque';
@@ -37,21 +37,33 @@ export default function LoginScreen() {
     }
 
     if (hasError) {
-      if (Platform.OS !== 'web') {
-        Alert.alert('Atenção', 'Preencha e-mail e senha.');
-      }
+      Toast.show({
+        type: 'error',
+        text1: 'Campos obrigatórios',
+        text2: 'Preencha e-mail e senha.',
+        position: 'top',
+      });
       return;
     }
 
     try {
       await login(email, password);
+      Toast.show({
+        type: 'success',
+        text1: 'Login efetuado!',
+        text2: 'Bem-vindo de volta ao ProEstoque.',
+        position: 'top',
+      });
       // Força o redirecionamento explicitamente, ignorando falhas do NavigationGuard na Web
       router.replace('/(tabs)');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro no login:', error);
-      Platform.OS === 'web'
-        ? window.alert('Erro ao fazer login. Tente novamente.')
-        : Alert.alert('Erro', 'Não foi possível fazer o login.');
+      Toast.show({
+        type: 'error',
+        text1: 'Erro no login',
+        text2: error.message || 'Não foi possível fazer o login. Tente novamente.',
+        position: 'top',
+      });
     }
   };
 
@@ -204,3 +216,4 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
 });
+

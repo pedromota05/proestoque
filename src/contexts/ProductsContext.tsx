@@ -7,6 +7,7 @@ import React, {
   useReducer,
 } from 'react';
 import { api } from '../services/api';
+import { useAuth } from './AuthContext';
 import type { Produto } from '../data/mockData';
 
 // ─── Types ───
@@ -19,7 +20,8 @@ type ProductsAction =
   | { type: 'LOAD'; payload: Produto[] }
   | { type: 'ADD'; payload: Produto }
   | { type: 'UPDATE'; payload: Produto }
-  | { type: 'DELETE'; payload: string };
+  | { type: 'DELETE'; payload: string }
+  | { type: 'RESET' };
 
 interface ProductsContextType {
   produtos: Produto[];
@@ -54,6 +56,9 @@ function produtosReducer(state: ProductsState, action: ProductsAction): Products
         produtos: state.produtos.filter((p) => p.id !== action.payload),
       };
 
+    case 'RESET':
+      return { produtos: [], loaded: false };
+
     default:
       return state;
   }
@@ -64,12 +69,13 @@ const ProductsContext = createContext<ProductsContextType | undefined>(undefined
 
 // ─── Provider ───
 export function ProductsProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const [state, dispatch] = useReducer(produtosReducer, {
     produtos: [],
     loaded: false,
   });
 
-  // Buscar produtos da API na montagem
+  // Buscar produtos da API
   const carregarProdutos = useCallback(async () => {
     try {
       const response = await api.get('/produtos');
@@ -83,9 +89,15 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Só busca produtos quando o usuário está autenticado
+  // Limpa os dados quando o usuário faz logout
   useEffect(() => {
-    carregarProdutos();
-  }, [carregarProdutos]);
+    if (isAuthenticated) {
+      carregarProdutos();
+    } else {
+      dispatch({ type: 'RESET' });
+    }
+  }, [isAuthenticated, carregarProdutos]);
 
   // ─── Actions ───
   const adicionarProduto = useCallback(
@@ -162,3 +174,4 @@ export function useProducts(): ProductsContextType {
   }
   return context;
 }
+

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import React, {
   createContext,
   useCallback,
@@ -7,6 +8,7 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import { api } from '../services/api';
 
 // ─── Tipos ───
 export interface User {
@@ -21,6 +23,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, senha: string) => Promise<void>;
+  registrar: (nome: string, email: string, senha: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -65,36 +68,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     restoreSession();
   }, []);
 
-  // Login simulado
-  const login = useCallback(async (email: string, _senha: string) => {
+  // Função auxiliar para persistir sessão
+  const persistSession = useCallback(async (userData: User, tokenValue: string) => {
+    await AsyncStorage.multiSet([
+      [STORAGE_KEYS.TOKEN, tokenValue],
+      [STORAGE_KEYS.USER, JSON.stringify(userData)],
+    ]);
+    setToken(tokenValue);
+    setUser(userData);
+  }, []);
+
+  // Login real via API
+  const login = useCallback(async (email: string, senha: string) => {
     setIsLoading(true);
     try {
-      // Simula delay de rede
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const response = await api.post('/auth/login', { email, senha });
+      const { usuario, token: jwtToken } = response.data;
 
-      const fakeToken = `token_${Date.now()}_${Math.random().toString(36).substring(2)}`;
-      const nome = email.split('@')[0];
-      const fakeUser: User = {
-        id: String(Date.now()),
-        nome,
-        email,
-      };
-
-      // Salvar em paralelo no disco
-      await AsyncStorage.multiSet([
-        [STORAGE_KEYS.TOKEN, fakeToken],
-        [STORAGE_KEYS.USER, JSON.stringify(fakeUser)],
-      ]);
-
-      setToken(fakeToken);
-      setUser(fakeUser);
+      await persistSession(usuario, jwtToken);
     } catch (error) {
-      console.error('Erro ao fazer login:', error);
-      throw error;
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Não foi possível realizar o login. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [persistSession]);
+
+  // Registro real via API
+  const registrar = useCallback(async (nome: string, email: string, senha: string) => {
+    setIsLoading(true);
+    try {
+      const response = await api.post('/auth/registro', { nome, email, senha });
+      const { usuario, token: jwtToken } = response.data;
+
+      await persistSession(usuario, jwtToken);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Não foi possível criar a conta. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [persistSession]);
 
   // Logout
   const logout = useCallback(async () => {
@@ -114,9 +132,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       isAuthenticated: !!token && !!user,
       login,
+      registrar,
       logout,
     }),
-    [user, token, isLoading, login, logout],
+    [user, token, isLoading, login, registrar, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

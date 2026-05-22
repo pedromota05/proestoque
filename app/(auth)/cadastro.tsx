@@ -10,29 +10,63 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { Button } from '../../src/components/Button';
 import { Input } from '../../src/components/Input';
 import { LogoProEstoque } from '../../src/components/LogoProEstoque';
 import { theme } from '../../src/constants/theme';
+import { useAuth } from '../../src/contexts/AuthContext';
 
 export default function CadastroScreen() {
   const router = useRouter();
+  const { registrar, isLoading } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
   const passwordMismatch =
     confirmPassword.length > 0 && password !== confirmPassword;
 
-  const handleCreateAccount = () => {
-    if (passwordMismatch) return;
+  const handleCreateAccount = async () => {
+    if (passwordMismatch) {
+      Toast.show({
+        type: 'error',
+        text1: 'Senhas não coincidem',
+        text2: 'Verifique se as senhas são iguais.',
+        position: 'top',
+      });
+      return;
+    }
 
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      Toast.show({
+        type: 'error',
+        text1: 'Campos obrigatórios',
+        text2: 'Preencha todos os campos.',
+        position: 'top',
+      });
+      return;
+    }
+
+    try {
+      await registrar(name, email, password);
+      Toast.show({
+        type: 'success',
+        text1: 'Conta criada com sucesso!',
+        text2: 'Bem-vindo ao ProEstoque.',
+        position: 'top',
+      });
+      // Login automático: o AuthContext já atualiza user/token,
+      // então o _layout redireciona para as tabs automaticamente.
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao criar conta',
+        text2: error.message || 'Não foi possível criar a conta. Tente novamente.',
+        position: 'top',
+      });
+    }
   };
 
   return (
@@ -165,3 +199,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
