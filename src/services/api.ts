@@ -2,6 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { Platform } from 'react-native';
 
+const STORAGE_KEYS = {
+  TOKEN: '@proestoque:token',
+  REFRESH_TOKEN: '@proestoque:refreshToken',
+  USER: '@proestoque:user',
+} as const;
+
 // O localhost funciona na Web e no iOS Simulator, mas falha no Android Emulator.
 // No Android Emulator, 10.0.2.2 é o alias para o localhost da máquina host.
 // Para dispositivo físico, use o IP real da máquina na rede local.
@@ -29,10 +35,7 @@ export const api = axios.create({
 // Anexa o token JWT em todas as requisições autenticadas
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('@proestoque:token');
-
-    // [DEBUG] Remover após confirmar que o token está sendo lido corretamente
-    console.log('Token injetado:', token);
+    const token = await AsyncStorage.getItem(STORAGE_KEYS.TOKEN);
 
     if (token) {
       config.headers = config.headers ?? {};
@@ -44,14 +47,58 @@ api.interceptors.request.use(
 );
 
 // ─── Response Interceptor ───
-// Captura erros globais; rejeita 401 para tratamento no AuthContext
+// Captura erros globais; gerencia Refresh Token para erros 401
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expirado ou inválido — propaga para tratamento superior
-      console.warn('Token expirado ou inválido (401).');
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Se o erro for 401 e a requisição original não for uma tentativa de login ou refresh
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes('/auth/login') &&
+      !originalRequest.url?.includes('/auth/refresh')
+    ) {
+      originalRequest._retry = true; // Flag para evitar loop infinito
+
+      try {
+        const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+
+        if (!refreshToken) {
+          throw new Error('Refresh token não encontrado');
+        }
+
+        // Tenta fazer o refresh chamando diretamente o axios genérico (sem interceptors para não gerar loops)
+        const response = await axios.post(`${BASE_URL}/auth/refresh`, {
+          refreshToken,
+        });
+
+        const { token: newToken, refreshToken: newRefreshToken } = response.data;
+
+        // Salva os novos tokens no storage
+        await AsyncStorage.multiSet([
+          [STORAGE_KEYS.TOKEN, newToken],
+          [STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken],
+        ]);
+
+        // Atualiza o header da requisição original que falhou e a re-executa
+        originalRequest.headers.set('Authorization', `Bearer ${newToken}`);
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Se falhar o refresh, limpa a sessão (força o logout)
+        await AsyncStorage.multiRemove([
+          STORAGE_KEYS.TOKEN,
+          STORAGE_KEYS.REFRESH_TOKEN,
+          STORAGE_KEYS.USER,
+        ]);
+
+        console.warn('Sessão expirada. O usuário foi deslogado.');
+        return Promise.reject(refreshError);
+      }
     }
+
     return Promise.reject(error);
   },
 );

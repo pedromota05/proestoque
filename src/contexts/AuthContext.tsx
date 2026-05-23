@@ -30,6 +30,7 @@ interface AuthContextType {
 // ─── Storage keys ───
 const STORAGE_KEYS = {
   TOKEN: '@proestoque:token',
+  REFRESH_TOKEN: '@proestoque:refreshToken',
   USER: '@proestoque:user',
 } as const;
 
@@ -46,13 +47,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function restoreSession() {
       try {
-        const [results] = await Promise.all([
-          AsyncStorage.multiGet([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER]),
+        const [storageResults] = await Promise.all([
+          AsyncStorage.multiGet([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER, STORAGE_KEYS.REFRESH_TOKEN]),
           new Promise((resolve) => setTimeout(resolve, 1500)),
         ]);
 
-        const storedToken = results[0][1];
-        const storedUser = results[1][1];
+        const tokenRecord = storageResults?.find((item) => item[0] === STORAGE_KEYS.TOKEN);
+        const storedToken = tokenRecord ? tokenRecord[1] : null;
+
+        const userRecord = storageResults?.find((item) => item[0] === STORAGE_KEYS.USER);
+        const storedUser = userRecord ? userRecord[1] : null;
 
         if (storedToken && storedUser) {
           setToken(storedToken);
@@ -69,9 +73,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Função auxiliar para persistir sessão
-  const persistSession = useCallback(async (userData: User, tokenValue: string) => {
+  const persistSession = useCallback(async (userData: User, tokenValue: string, refreshTokenValue: string) => {
     await AsyncStorage.multiSet([
       [STORAGE_KEYS.TOKEN, tokenValue],
+      [STORAGE_KEYS.REFRESH_TOKEN, refreshTokenValue],
       [STORAGE_KEYS.USER, JSON.stringify(userData)],
     ]);
     setToken(tokenValue);
@@ -83,9 +88,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const response = await api.post('/auth/login', { email, senha });
-      const { usuario, token: jwtToken } = response.data;
+      const { usuario, token: jwtToken, refreshToken } = response.data;
 
-      await persistSession(usuario, jwtToken);
+      await persistSession(usuario, jwtToken, refreshToken);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.data?.message) {
         throw new Error(error.response.data.message);
@@ -101,9 +106,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const response = await api.post('/auth/registro', { nome, email, senha });
-      const { usuario, token: jwtToken } = response.data;
+      const { usuario, token: jwtToken, refreshToken } = response.data;
 
-      await persistSession(usuario, jwtToken);
+      await persistSession(usuario, jwtToken, refreshToken);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.data?.message) {
         throw new Error(error.response.data.message);
@@ -117,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Logout
   const logout = useCallback(async () => {
     try {
-      await AsyncStorage.multiRemove([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER]);
+      await AsyncStorage.multiRemove([STORAGE_KEYS.TOKEN, STORAGE_KEYS.REFRESH_TOKEN, STORAGE_KEYS.USER]);
       setToken(null);
       setUser(null);
     } catch (error) {
