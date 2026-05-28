@@ -19,7 +19,7 @@ import { Input } from '../../../src/components/Input';
 import { Button } from '../../../src/components/Button';
 import { theme } from '../../../src/constants/theme';
 import { useProducts } from '../../../src/contexts/ProductsContext';
-import { CATEGORIAS_MOCK } from '../../../src/data/mockData';
+import { useCategorias } from '../../../src/hooks/useCategorias';
 import {
   produtoSchema,
   type ProdutoFormData,
@@ -37,6 +37,7 @@ export default function EditarProdutoScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getProdutoById, editarProduto, deletarProduto } = useProducts();
+  const { categorias } = useCategorias();
 
   const produto = id ? getProdutoById(id) : undefined;
   const [precoTexto, setPrecoTexto] = useState('');
@@ -99,12 +100,13 @@ export default function EditarProdutoScreen() {
         position: 'top',
       });
       router.back();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar:', error);
+      const errorMessage = error?.response?.data?.message || 'Não foi possível salvar o produto.';
       Toast.show({
         type: 'error',
         text1: 'Erro',
-        text2: 'Não foi possível salvar o produto.',
+        text2: errorMessage,
         position: 'top',
       });
     }
@@ -135,14 +137,25 @@ export default function EditarProdutoScreen() {
             text: 'Excluir',
             style: 'destructive',
             onPress: async () => {
-              await deletarProduto(id);
-              Toast.show({
-                type: 'success',
-                text1: 'Excluído!',
-                text2: 'O produto foi removido do estoque.',
-                position: 'top',
-              });
-              router.back();
+              try {
+                await deletarProduto(id);
+                Toast.show({
+                  type: 'success',
+                  text1: 'Excluído!',
+                  text2: 'O produto foi removido do estoque.',
+                  position: 'top',
+                });
+                router.back();
+              } catch (error: any) {
+                console.error('Erro ao excluir:', error);
+                const errorMessage = error?.response?.data?.message || 'Não foi possível excluir o produto.';
+                Toast.show({
+                  type: 'error',
+                  text1: 'Erro',
+                  text2: errorMessage,
+                  position: 'top',
+                });
+              }
             },
           },
         ],
@@ -214,7 +227,7 @@ export default function EditarProdutoScreen() {
             name="categoriaId"
             render={({ field: { onChange, value } }) => (
               <View style={styles.chipsRow}>
-                {CATEGORIAS_MOCK.map((cat) => {
+                {categorias.map((cat) => {
                   const ativo = value === cat.id;
                   return (
                     <TouchableOpacity

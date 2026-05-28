@@ -13,16 +13,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebFooter } from '../../src/components/web/WebFooter';
+import { LoadingView } from '../../src/components/LoadingView';
+import { ProdutoListaSkeleton } from '../../src/components/ProdutoSkeleton';
+import { ErrorView } from '../../src/components/ErrorView';
 import { theme } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useProducts } from '../../src/contexts/ProductsContext';
+import { useCategorias } from '../../src/hooks/useCategorias';
 import {
-  CATEGORIAS_MOCK,
   formatarPreco,
   getProdutosComEstoqueBaixo,
   getValorTotalEstoque,
-  type Produto,
-} from '../../src/data/mockData';
+} from '../../src/utils/helpers';
+import type { Produto, Categoria } from '../../src/types';
 
 const isWeb = Platform.OS === 'web';
 
@@ -66,20 +69,15 @@ const STATUS_CONFIG: Record<
   },
 };
 
-function getCategoriaIcone(categoriaId: string): string {
-  return (
-    CATEGORIAS_MOCK.find((c) => c.id === categoriaId)?.icone ??
-    'cube-outline'
-  );
+function getCategoriaIcone(categoriaId: string, categorias: Categoria[]): string {
+  return categorias.find((c) => c.id === categoriaId)?.icone ?? 'cube-outline';
 }
 
-
-
 // ─── Componentes internos ───
-function ProdutoCard({ produto }: { produto: Produto }) {
+function ProdutoCard({ produto, categorias }: { produto: Produto; categorias: Categoria[] }) {
   const status = getStatusEstoque(produto);
   const config = STATUS_CONFIG[status];
-  const icone = getCategoriaIcone(produto.categoriaId);
+  const icone = getCategoriaIcone(produto.categoriaId, categorias);
 
   return (
     <View style={styles.produtoCard}>
@@ -170,7 +168,8 @@ function AlertaEstoqueCritico({
 
 export default function HomeScreen() {
   const { user } = useAuth();
-  const { produtos, recarregar } = useProducts();
+  const { produtos, recarregar, isLoading, error } = useProducts();
+  const { categorias, isLoading: isLoadingCategorias, recarregar: recarregarCategorias } = useCategorias();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
@@ -226,7 +225,7 @@ export default function HomeScreen() {
       {
         id: 'card-categorias',
         titulo: 'Categorias',
-        valor: String(CATEGORIAS_MOCK.length),
+        valor: String(categorias.length),
         icone: 'grid-outline' as keyof typeof Ionicons.glyphMap,
         corIcone: theme.colors.accent,
         corFundo: theme.colors.accentLight,
@@ -240,17 +239,22 @@ export default function HomeScreen() {
         corFundo: theme.colors.warningBackground,
       },
     ],
-    [produtosBaixoEstoque, totalEstoque],
+    [produtosBaixoEstoque, totalEstoque, produtos.length, categorias.length],
   );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await recarregar();
+      await Promise.all([recarregar(), recarregarCategorias()]);
     } finally {
       setRefreshing(false);
     }
-  }, [recarregar]);
+  }, [recarregar, recarregarCategorias]);
+
+  const handleRetry = () => {
+    recarregar();
+    recarregarCategorias();
+  };
 
   const ListHeader = (
     <View style={styles.headerWrapper}>
@@ -356,13 +360,26 @@ export default function HomeScreen() {
   const renderItem = useCallback(
     ({ item }: { item: Produto }) => (
       <View style={styles.itemWrapper}>
-        <ProdutoCard produto={item} />
+        <ProdutoCard produto={item} categorias={categorias} />
       </View>
     ),
-    [],
+    [categorias],
   );
 
   const keyExtractor = useCallback((item: Produto) => item.id, []);
+
+  if ((isLoading || isLoadingCategorias) && produtos.length === 0) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        {ListHeader}
+        <ProdutoListaSkeleton count={3} />
+      </SafeAreaView>
+    );
+  }
+
+  if (error && produtos.length === 0) {
+    return <ErrorView message={error} onRetry={handleRetry} />;
+  }
 
   return (
     <SafeAreaView style={styles.safe}>

@@ -17,7 +17,7 @@ import { Input } from '../../../src/components/Input';
 import { Button } from '../../../src/components/Button';
 import { theme } from '../../../src/constants/theme';
 import { useProducts } from '../../../src/contexts/ProductsContext';
-import { CATEGORIAS_MOCK } from '../../../src/data/mockData';
+import { useCategorias } from '../../../src/hooks/useCategorias';
 import {
   produtoSchema,
   type ProdutoFormData,
@@ -34,6 +34,7 @@ const UNIDADES = [
 export default function NovoProdutoScreen() {
   const router = useRouter();
   const { adicionarProduto } = useProducts();
+  const { categorias } = useCategorias();
   const [precoTexto, setPrecoTexto] = useState('');
 
   const {
@@ -74,12 +75,13 @@ export default function NovoProdutoScreen() {
         position: 'top',
       });
       router.back();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar:', error);
+      const errorMessage = error?.response?.data?.message || 'Não foi possível salvar o produto.';
       Toast.show({
         type: 'error',
         text1: 'Erro',
-        text2: 'Não foi possível salvar o produto.',
+        text2: errorMessage,
         position: 'top',
       });
     }
@@ -134,7 +136,7 @@ export default function NovoProdutoScreen() {
             name="categoriaId"
             render={({ field: { onChange, value } }) => (
               <View style={styles.chipsRow}>
-                {CATEGORIAS_MOCK.map((cat) => {
+                {categorias.map((cat) => {
                   const ativo = value === cat.id;
                   return (
                     <TouchableOpacity

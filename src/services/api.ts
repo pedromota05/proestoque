@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 const STORAGE_KEYS = {
   TOKEN: '@proestoque:token',
@@ -8,10 +9,12 @@ const STORAGE_KEYS = {
   USER: '@proestoque:user',
 } as const;
 
-// O localhost funciona na Web e no iOS Simulator, mas falha no Android Emulator.
-// No Android Emulator, 10.0.2.2 é o alias para o localhost da máquina host.
-// Para dispositivo físico, use o IP real da máquina na rede local.
+// Utiliza a variável de ambiente se estiver definida, senão cai nos fallbacks originais.
 const getBaseUrl = () => {
+  if (Constants.expoConfig?.extra?.apiUrl) {
+    return Constants.expoConfig.extra.apiUrl;
+  }
+  
   if (Platform.OS === 'web') {
     return 'http://localhost:3333/api';
   }

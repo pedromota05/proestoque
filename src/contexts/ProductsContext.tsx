@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, {
   createContext,
   useCallback,
@@ -7,17 +8,22 @@ import React, {
   useReducer,
 } from 'react';
 import { api } from '../services/api';
+import { notificarEstoqueCritico } from '../services/notifications';
 import { useAuth } from './AuthContext';
-import type { Produto } from '../data/mockData';
+import type { Produto } from '../types';
 
 // ─── Types ───
 interface ProductsState {
   produtos: Produto[];
   loaded: boolean;
+  isLoading: boolean;
+  error: string | null;
 }
 
 type ProductsAction =
-  | { type: 'LOAD'; payload: Produto[] }
+  | { type: 'LOAD_START' }
+  | { type: 'LOAD_SUCCESS'; payload: Produto[] }
+  | { type: 'LOAD_ERROR'; payload: string }
   | { type: 'ADD'; payload: Produto }
   | { type: 'UPDATE'; payload: Produto }
   | { type: 'DELETE'; payload: string }
@@ -26,6 +32,8 @@ type ProductsAction =
 interface ProductsContextType {
   produtos: Produto[];
   loaded: boolean;
+  isLoading: boolean;
+  error: string | null;
   adicionarProduto: (data: Omit<Produto, 'id' | 'criadoEm' | 'atualizadoEm'>) => Promise<void>;
   editarProduto: (id: string, data: Partial<Omit<Produto, 'id' | 'criadoEm'>>) => Promise<void>;
   deletarProduto: (id: string) => Promise<void>;
@@ -36,8 +44,14 @@ interface ProductsContextType {
 // ─── Reducer ───
 function produtosReducer(state: ProductsState, action: ProductsAction): ProductsState {
   switch (action.type) {
-    case 'LOAD':
-      return { ...state, produtos: action.payload, loaded: true };
+    case 'LOAD_START':
+      return { ...state, isLoading: true, error: null };
+
+    case 'LOAD_SUCCESS':
+      return { ...state, produtos: action.payload, loaded: true, isLoading: false, error: null };
+
+    case 'LOAD_ERROR':
+      return { ...state, isLoading: false, error: action.payload, loaded: true };
 
     case 'ADD':
       return { ...state, produtos: [...state.produtos, action.payload] };
@@ -57,7 +71,7 @@ function produtosReducer(state: ProductsState, action: ProductsAction): Products
       };
 
     case 'RESET':
-      return { produtos: [], loaded: false };
+      return { produtos: [], loaded: false, isLoading: false, error: null };
 
     default:
       return state;
@@ -73,19 +87,27 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(produtosReducer, {
     produtos: [],
     loaded: false,
+    isLoading: false,
+    error: null,
   });
 
   // Buscar produtos da API
   const carregarProdutos = useCallback(async () => {
+    dispatch({ type: 'LOAD_START' });
     try {
       const response = await api.get('/produtos');
-      // Extraímos os produtos de response.data.dados devido à paginação
       const produtosFetch: Produto[] = response.data.dados || response.data;
-      dispatch({ type: 'LOAD', payload: produtosFetch });
+      dispatch({ type: 'LOAD_SUCCESS', payload: produtosFetch });
+      
+      const criticos = produtosFetch.filter(p => p.quantidade <= p.quantidadeMinima);
+      notificarEstoqueCritico(criticos);
     } catch (error) {
       console.error('Erro ao carregar produtos da API:', error);
-      // Marca como loaded mesmo em caso de erro para não travar o splash
-      dispatch({ type: 'LOAD', payload: [] });
+      let errorMessage = 'Não foi possível carregar os produtos.';
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      dispatch({ type: 'LOAD_ERROR', payload: errorMessage });
     }
   }, []);
 
@@ -150,13 +172,15 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     () => ({
       produtos: state.produtos,
       loaded: state.loaded,
+      isLoading: state.isLoading,
+      error: state.error,
       adicionarProduto,
       editarProduto,
       deletarProduto,
       getProdutoById,
       recarregar: carregarProdutos,
     }),
-    [state.produtos, state.loaded, adicionarProduto, editarProduto, deletarProduto, getProdutoById, carregarProdutos],
+    [state, adicionarProduto, editarProduto, deletarProduto, getProdutoById, carregarProdutos],
   );
 
   return (

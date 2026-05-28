@@ -16,12 +16,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebFooter } from '../../../src/components/web/WebFooter';
+import { LoadingView } from '../../../src/components/LoadingView';
+import { ProdutoListaSkeleton } from '../../../src/components/ProdutoSkeleton';
+import { ErrorView } from '../../../src/components/ErrorView';
 import { theme } from '../../../src/constants/theme';
 import { useProducts } from '../../../src/contexts/ProductsContext';
-import {
-  CATEGORIAS_MOCK,
-  type Produto,
-} from '../../../src/data/mockData';
+import { useCategorias } from '../../../src/hooks/useCategorias';
+import type { Produto, Categoria } from '../../../src/types';
 
 const isWeb = Platform.OS === 'web';
 
@@ -63,31 +64,25 @@ const STATUS_CONFIG: Record<
   },
 };
 
-function getCategoriaIcone(categoriaId: string): string {
-  return (
-    CATEGORIAS_MOCK.find((c) => c.id === categoriaId)?.icone ??
-    'cube-outline'
-  );
+function getCategoriaIcone(categoriaId: string, categorias: Categoria[]): string {
+  return categorias.find((c) => c.id === categoriaId)?.icone ?? 'cube-outline';
 }
-
-const CHIPS: ChipCategoria[] = [
-  { id: null, nome: 'Todos' },
-  ...CATEGORIAS_MOCK.map((c) => ({ id: c.id, nome: c.nome })),
-];
 
 // ─── Componentes internos ───
 function ProdutoCard({
   produto,
+  categorias,
   layoutColuna = false,
   onPress,
 }: {
   produto: Produto;
+  categorias: Categoria[];
   layoutColuna?: boolean;
   onPress?: () => void;
 }) {
   const status = getStatusEstoque(produto);
   const config = STATUS_CONFIG[status];
-  const icone = getCategoriaIcone(produto.categoriaId);
+  const icone = getCategoriaIcone(produto.categoriaId, categorias);
 
   return (
     <TouchableOpacity
@@ -177,7 +172,8 @@ function ListaVazia() {
 
 // ─── Componente principal ───
 export default function ProdutosScreen() {
-  const { produtos, recarregar } = useProducts();
+  const { produtos, recarregar, isLoading, error } = useProducts();
+  const { categorias, isLoading: isLoadingCategorias, recarregar: recarregarCategorias } = useCategorias();
   const router = useRouter();
 
   const [busca, setBusca] = useState('');
@@ -191,6 +187,11 @@ export default function ProdutosScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const layoutColuna = modoVisualizacao === 'grade' && !isDesktop;
+
+  const chips = useMemo<ChipCategoria[]>(() => [
+    { id: null, nome: 'Todos' },
+    ...categorias.map((c) => ({ id: c.id, nome: c.nome }))
+  ], [categorias]);
 
   const produtosFiltrados = useMemo(() => {
     const termoNormalizado = busca.trim().toLowerCase();
@@ -209,31 +210,37 @@ export default function ProdutosScreen() {
   }, [busca, categoriaSelecionada, produtos]);
 
   const secoesAgrupadas = useMemo<Secao[]>(() => {
-    return CATEGORIAS_MOCK.map((cat) => ({
+    return categorias.map((cat) => ({
       title: cat.nome,
       categoriaId: cat.id,
       data: produtosFiltrados.filter((p) => p.categoriaId === cat.id),
     })).filter((secao) => secao.data.length > 0);
-  }, [produtosFiltrados]);
+  }, [produtosFiltrados, categorias]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await recarregar();
+      await Promise.all([recarregar(), recarregarCategorias()]);
     } finally {
       setRefreshing(false);
     }
-  }, [recarregar]);
+  }, [recarregar, recarregarCategorias]);
+
+  const handleRetry = () => {
+    recarregar();
+    recarregarCategorias();
+  };
 
   const renderGradeItem = useCallback(
     ({ item }: { item: Produto }) => (
       <ProdutoCard
         produto={item}
+        categorias={categorias}
         layoutColuna={layoutColuna}
         onPress={() => router.push(`/produtos/${item.id}` as any)}
       />
     ),
-    [layoutColuna, router],
+    [layoutColuna, router, categorias],
   );
 
   const renderAgrupItem = useCallback(
@@ -241,11 +248,12 @@ export default function ProdutosScreen() {
       <View style={styles.itemWrapper}>
         <ProdutoCard
           produto={item}
+          categorias={categorias}
           onPress={() => router.push(`/produtos/${item.id}` as any)}
         />
       </View>
     ),
-    [router],
+    [router, categorias],
   );
 
   const keyExtractor = useCallback((item: Produto) => item.id, []);
@@ -299,7 +307,7 @@ export default function ProdutosScreen() {
       </View>
 
       <View style={styles.chipsRow}>
-        {CHIPS.map((chip) => {
+        {chips.map((chip) => {
           const ativo = categoriaSelecionada === chip.id;
           return (
             <TouchableOpacity
@@ -412,6 +420,19 @@ export default function ProdutosScreen() {
     />
   );
 
+  if ((isLoading || isLoadingCategorias) && produtos.length === 0) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        {ListHeader}
+        <ProdutoListaSkeleton layoutColuna={layoutColuna} count={6} />
+      </SafeAreaView>
+    );
+  }
+
+  if (error && produtos.length === 0) {
+    return <ErrorView message={error} onRetry={handleRetry} />;
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       {modoVisualizacao === 'grade' ? (
@@ -441,7 +462,7 @@ export default function ProdutosScreen() {
               <View style={styles.sectionHeader}>
                 <Ionicons
                   name={
-                    (CATEGORIAS_MOCK.find((c) => c.id === section.categoriaId)
+                    (categorias.find((c) => c.id === section.categoriaId)
                       ?.icone ?? 'cube-outline') as keyof typeof Ionicons.glyphMap
                   }
                   size={18}

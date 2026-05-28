@@ -5,6 +5,7 @@ import { ActivityIndicator, Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { ProductsProvider } from '../src/contexts/ProductsContext';
+import { solicitarPermissaoNotificacoes, agendarVerificacaoDiaria } from '../src/services/notifications';
 import { theme } from '../src/constants/theme';
 import { SplashScreen } from '../src/components/SplashScreen';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
@@ -25,6 +26,13 @@ function NavigationGuard({ children }: { children: React.ReactNode }) {
       router.replace('/(tabs)');
     }
   }, [isAuthenticated, isLoading, segments, router]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      solicitarPermissaoNotificacoes();
+      agendarVerificacaoDiaria();
+    }
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return <SplashScreen />;
