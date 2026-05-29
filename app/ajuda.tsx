@@ -126,6 +126,7 @@ const styles = (colors: ThemeColors) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -133,10 +134,12 @@ const styles = (colors: ThemeColors) => StyleSheet.create({
     backgroundColor: colors.surface,
   },
   backButton: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     padding: 8,
-    marginRight: 16,
   },
   backText: {
     fontSize: 16,

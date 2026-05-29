@@ -22,10 +22,11 @@ export default function TabsLayout() {
             ? { display: 'none' }
             : {
               borderTopColor: colors.border,
-              backgroundColor: colors.background,
-              height: 60,
-              paddingBottom: 8,
+              backgroundColor: colors.surface,
+              minHeight: 60,
               paddingTop: 8,
+              paddingBottom: Platform.OS === 'android' ? 8 : 28,
+              elevation: 0,
             },
           tabBarLabelStyle: {
             fontSize: 12,
@@ -46,6 +47,7 @@ export default function TabsLayout() {
           name="produtos"
           options={{
             title: 'Produtos',
+            href: '/produtos',
             tabBarIcon: ({ color, size, focused }) => (
               <Ionicons name={focused ? 'folder' : 'folder-outline'} size={size} color={color} />
             ),
