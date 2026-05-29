@@ -17,7 +17,7 @@ const ThemeContext = createContext<ThemeContextData>({} as ThemeContextData);
 const THEME_STORAGE_KEY = '@proestoque:theme';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [themePreference, setThemeState] = useState<ThemePreference>('system');
+  const [themePreference, setThemeState] = useState<ThemePreference>('light');
   const [systemTheme, setSystemTheme] = useState<ColorSchemeName>(Appearance.getColorScheme());
 
   useEffect(() => {
