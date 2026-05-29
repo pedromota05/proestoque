@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "proestoque",
-    "slug": "proestoque",
+    "slug": "proestoque-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -17,7 +17,8 @@
         "foregroundImage": "./assets/images/icon.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.pedromota05.proestoqueapp"
     },
     "web": {
       "output": "static",
@@ -46,6 +47,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "apiUrl": "http://localhost:3333/api",
+      "router": {},
+      "eas": {
+        "projectId": "06edf5d6-bac0-4092-94de-e1ec63925638"
+      }
     }
   }
 }
