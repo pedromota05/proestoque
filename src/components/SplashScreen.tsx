@@ -1,9 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { LogoProEstoque } from './LogoProEstoque';
-import { theme } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { ThemeColors } from '../constants/theme';
 
 export function SplashScreen() {
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -20,22 +23,22 @@ export function SplashScreen() {
   });
 
   return (
-    <View style={styles.container}>
+    <View style={s.container}>
       <LogoProEstoque size="lg" />
-      <View style={styles.spacing} />
-      <View style={styles.progressBarContainer}>
-        <Animated.View style={[styles.progressBar, { width: widthInterpolated }]} />
+      <View style={s.spacing} />
+      <View style={s.progressBarContainer}>
+        <Animated.View style={[s.progressBar, { width: widthInterpolated }]} />
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   spacing: {
     height: 32,
@@ -43,13 +46,13 @@ const styles = StyleSheet.create({
   progressBarContainer: {
     width: 200,
     height: 6,
-    backgroundColor: '#E2E8F0', // slate-200
+    backgroundColor: colors.border, 
     borderRadius: 3,
     overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 3,
   },
 });

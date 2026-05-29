@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleProp, StyleSheet, ViewStyle } from 'react-native';
-import { theme } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { ThemeColors } from '../constants/theme';
 
 interface SkeletonProps {
   width?: number | string;
@@ -10,6 +11,8 @@ interface SkeletonProps {
 }
 
 export function Skeleton({ width, height, borderRadius = 8, style }: SkeletonProps) {
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
   const animatedValue = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -32,7 +35,7 @@ export function Skeleton({ width, height, borderRadius = 8, style }: SkeletonPro
   return (
     <Animated.View
       style={[
-        styles.skeleton,
+        s.skeleton,
         {
           width,
           height,
@@ -45,8 +48,8 @@ export function Skeleton({ width, height, borderRadius = 8, style }: SkeletonPro
   );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: ThemeColors) => StyleSheet.create({
   skeleton: {
-    backgroundColor: theme.colors.border,
+    backgroundColor: colors.border,
   },
 });

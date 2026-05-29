@@ -1,12 +1,13 @@
 import { Stack, useRouter } from 'expo-router';
 import { Platform, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../../src/constants/theme';
+import { useTheme } from '../../../src/contexts/ThemeContext';
 
 const isWeb = Platform.OS === 'web';
 
 export default function ProdutosLayout() {
   const router = useRouter();
+  const { colors } = useTheme();
 
   const CustomBackButton = () => (
     <TouchableOpacity
@@ -20,18 +21,18 @@ export default function ProdutosLayout() {
       }}
       style={{ paddingRight: 16, flexDirection: 'row', alignItems: 'center' }}
     >
-      <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
+      <Ionicons name="arrow-back" size={24} color={colors.primary} />
     </TouchableOpacity>
   );
 
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: theme.colors.background },
+        headerStyle: { backgroundColor: colors.background },
         headerShadowVisible: false,
-        headerTintColor: theme.colors.primary,
+        headerTintColor: colors.primary,
         headerTitleStyle: { fontWeight: 'bold' },
-        contentStyle: { backgroundColor: theme.colors.background },
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
       <Stack.Screen

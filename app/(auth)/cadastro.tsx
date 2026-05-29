@@ -15,11 +15,14 @@ import Toast from 'react-native-toast-message';
 import { Button } from '../../src/components/Button';
 import { Input } from '../../src/components/Input';
 import { LogoProEstoque } from '../../src/components/LogoProEstoque';
-import { theme } from '../../src/constants/theme';
+import { useTheme } from '../../src/contexts/ThemeContext';
+import { ThemeColors } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 
 export default function CadastroScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
   const { registrar, isLoading } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -74,23 +77,23 @@ export default function CadastroScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={s.safe}>
       <KeyboardAvoidingView
-        style={styles.flex}
+        style={s.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={s.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={[styles.innerContainer, Platform.OS === 'web' && styles.webCard]}>
-            <View style={styles.header}>
+          <View style={[s.innerContainer, Platform.OS === 'web' && s.webCard]}>
+            <View style={s.header}>
               <LogoProEstoque size="lg" />
-              <Text style={styles.subtitle}>Preencha seus dados para começar</Text>
+              <Text style={s.subtitle}>Preencha seus dados para começar</Text>
             </View>
 
-            <View style={styles.form}>
+            <View style={s.form}>
               <Input
                 icon="person-outline"
                 placeholder="Nome completo"
@@ -150,12 +153,12 @@ export default function CadastroScreen() {
               />
             </View>
 
-            <View style={styles.footer}>
+            <View style={s.footer}>
               <TouchableOpacity
                 onPress={() => router.back()}
                 accessibilityRole="link"
               >
-                <Text style={styles.footerLink}>Já tenho conta</Text>
+                <Text style={s.footerLink}>Já tenho conta</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -165,10 +168,10 @@ export default function CadastroScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: ThemeColors) => StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   flex: {
     flex: 1,
@@ -185,7 +188,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   webCard: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 32,
     shadowColor: '#000',
@@ -201,7 +204,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: theme.colors.textLight,
+    color: colors.textLight,
     marginTop: 10,
   },
   form: {
@@ -213,7 +216,7 @@ const styles = StyleSheet.create({
   },
   footerLink: {
     fontSize: 14,
-    color: theme.colors.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
 });

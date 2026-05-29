@@ -2,25 +2,27 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { Platform, View } from 'react-native';
 import { WebHeader } from '../../src/components/web/WebHeader';
-import { theme } from '../../src/constants/theme';
+import { useTheme } from '../../src/contexts/ThemeContext';
 
 const isWeb = Platform.OS === 'web';
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
+
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       {isWeb && <WebHeader />}
 
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: theme.colors.primary,
-          tabBarInactiveTintColor: theme.colors.textLight,
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.textLight,
           tabBarStyle: isWeb
             ? { display: 'none' }
             : {
-              borderTopColor: theme.colors.border,
-              backgroundColor: theme.colors.background,
+              borderTopColor: colors.border,
+              backgroundColor: colors.background,
               height: 60,
               paddingBottom: 8,
               paddingTop: 8,

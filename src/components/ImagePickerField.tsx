@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { theme } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { ThemeColors } from '../constants/theme';
 
 interface ImagePickerFieldProps {
   value: string | null;
@@ -17,6 +18,9 @@ interface ImagePickerFieldProps {
 }
 
 export function ImagePickerField({ value, onChange }: ImagePickerFieldProps) {
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
+
   async function pickFromCamera() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
@@ -94,19 +98,19 @@ export function ImagePickerField({ value, onChange }: ImagePickerFieldProps) {
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={handlePress}
-      style={styles.container}
+      style={s.container}
     >
       {value ? (
         <Image
           source={{ uri: value }}
-          style={styles.image}
+          style={s.image}
         />
       ) : (
-        <View style={styles.placeholder}>
+        <View style={s.placeholder}>
           <Ionicons
             name="camera-outline"
             size={32}
-            color={theme.colors.textLight}
+            color={colors.textLight}
           />
         </View>
       )}
@@ -114,7 +118,7 @@ export function ImagePickerField({ value, onChange }: ImagePickerFieldProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     width: 100,
     height: 100,
@@ -128,9 +132,9 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.surface,
     borderWidth: 2,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
     borderStyle: 'dashed',
     borderRadius: 12,
     alignItems: 'center',

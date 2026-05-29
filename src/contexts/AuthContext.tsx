@@ -20,6 +20,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  isInitializing: boolean;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, senha: string) => Promise<void>;
@@ -41,7 +42,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Restaurar sessão ao montar
   useEffect(() => {
@@ -65,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Erro ao restaurar sessão:', error);
       } finally {
-        setIsLoading(false);
+        setIsInitializing(false);
       }
     }
 
@@ -134,13 +136,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user,
       token,
+      isInitializing,
       isLoading,
       isAuthenticated: !!token && !!user,
       login,
       registrar,
       logout,
     }),
-    [user, token, isLoading, login, registrar, logout],
+    [user, token, isInitializing, isLoading, login, registrar, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

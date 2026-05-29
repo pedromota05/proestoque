@@ -6,7 +6,8 @@ import {
   StyleSheet,
   type TouchableOpacityProps,
 } from 'react-native';
-import { theme } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { ThemeColors } from '../constants/theme';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -22,14 +23,16 @@ export function Button({
   style,
   ...rest
 }: ButtonProps) {
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
   const isSolid = variant === 'solid';
 
   return (
     <TouchableOpacity
       style={[
-        styles.base,
-        isSolid ? styles.solid : styles.outline,
-        (disabled || loading) && styles.disabled,
+        s.base,
+        isSolid ? s.solid : s.outline,
+        (disabled || loading) && s.disabled,
         style,
       ]}
       disabled={disabled || loading}
@@ -41,11 +44,11 @@ export function Button({
     >
       {loading ? (
         <ActivityIndicator
-          color={isSolid ? '#FFFFFF' : theme.colors.primary}
+          color={isSolid ? '#FFFFFF' : colors.primary}
           size="small"
         />
       ) : (
-        <Text style={[styles.text, isSolid ? styles.textSolid : styles.textOutline]}>
+        <Text style={[s.text, isSolid ? s.textSolid : s.textOutline]}>
           {title}
         </Text>
       )}
@@ -53,7 +56,7 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: ThemeColors) => StyleSheet.create({
   base: {
     width: '100%',
     height: 52,
@@ -62,12 +65,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   solid: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.primary,
   },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: theme.colors.primary,
+    borderColor: colors.primary,
   },
   disabled: {
     opacity: 0.6,
@@ -80,6 +83,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   textOutline: {
-    color: theme.colors.primary,
+    color: colors.primary,
   },
 });

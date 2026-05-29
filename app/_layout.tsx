@@ -6,12 +6,14 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { ProductsProvider } from '../src/contexts/ProductsContext';
 import { solicitarPermissaoNotificacoes, agendarVerificacaoDiaria } from '../src/services/notifications';
-import { theme } from '../src/constants/theme';
 import { SplashScreen } from '../src/components/SplashScreen';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+import { ThemeProvider, useTheme } from '../src/contexts/ThemeContext';
+import { ThemeColors } from '../src/constants/theme';
 
 function NavigationGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isInitializing } = useAuth();
+  const { isDark } = useTheme();
   const segments = useSegments();
 
   useEffect(() => {
@@ -21,7 +23,7 @@ function NavigationGuard({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated]);
 
-  if (isLoading) {
+  if (isInitializing) {
     return <SplashScreen />;
   }
 
@@ -37,29 +39,40 @@ function NavigationGuard({ children }: { children: React.ReactNode }) {
     return <Redirect href="/(tabs)" />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      {children}
+    </>
+  );
 }
 
-const toastConfig = {
-  success: (props: any) => (
-    <BaseToast
-      {...props}
-      style={{ borderLeftColor: theme.colors.accent, height: 'auto', paddingVertical: 12, minHeight: 60 }}
-      contentContainerStyle={{ paddingHorizontal: 15 }}
-      text1Style={{ fontSize: 18, fontWeight: '700', color: theme.colors.text }}
-      text2Style={{ fontSize: 15, color: theme.colors.textLight }}
-    />
-  ),
-  error: (props: any) => (
-    <ErrorToast
-      {...props}
-      style={{ borderLeftColor: theme.colors.error, height: 'auto', paddingVertical: 12, minHeight: 60 }}
-      contentContainerStyle={{ paddingHorizontal: 15 }}
-      text1Style={{ fontSize: 18, fontWeight: '700', color: theme.colors.text }}
-      text2Style={{ fontSize: 15, color: theme.colors.textLight }}
-    />
-  ),
-};
+function ThemedToast() {
+  const { colors } = useTheme();
+
+  const toastConfig = React.useMemo(() => ({
+    success: (props: any) => (
+      <BaseToast
+        {...props}
+        style={{ borderLeftColor: colors.accent, backgroundColor: colors.surface, height: 'auto', paddingVertical: 12, minHeight: 60 }}
+        contentContainerStyle={{ paddingHorizontal: 15 }}
+        text1Style={{ fontSize: 18, fontWeight: '700', color: colors.text }}
+        text2Style={{ fontSize: 15, color: colors.textLight }}
+      />
+    ),
+    error: (props: any) => (
+      <ErrorToast
+        {...props}
+        style={{ borderLeftColor: colors.error, backgroundColor: colors.surface, height: 'auto', paddingVertical: 12, minHeight: 60 }}
+        contentContainerStyle={{ paddingHorizontal: 15 }}
+        text1Style={{ fontSize: 18, fontWeight: '700', color: colors.text }}
+        text2Style={{ fontSize: 15, color: colors.textLight }}
+      />
+    ),
+  }), [colors]);
+
+  return <Toast config={toastConfig} />;
+}
 
 export default function RootLayout() {
   useEffect(() => {
@@ -74,15 +87,16 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <ProductsProvider>
-          <NavigationGuard>
-            <Stack screenOptions={{ headerShown: false }} />
-          </NavigationGuard>
-          <StatusBar style="dark" />
-          <Toast config={toastConfig} />
-        </ProductsProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ProductsProvider>
+            <NavigationGuard>
+              <Stack screenOptions={{ headerShown: false }} />
+            </NavigationGuard>
+            <ThemedToast />
+          </ProductsProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

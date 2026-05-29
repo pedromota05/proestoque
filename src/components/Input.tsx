@@ -8,7 +8,8 @@ import {
   type TextInputProps,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { ThemeColors } from '../constants/theme';
 
 interface InputProps extends TextInputProps {
   icon?: React.ComponentProps<typeof Ionicons>['name'];
@@ -18,39 +19,41 @@ interface InputProps extends TextInputProps {
 
 export const Input = forwardRef<TextInput, InputProps>(
   ({ icon, error, isPassword = false, style, multiline, onFocus, onBlur, ...rest }, ref) => {
+    const { colors } = useTheme();
+    const s = React.useMemo(() => styles(colors), [colors]);
     const [isSecure, setIsSecure] = useState(isPassword);
     const [isFocused, setIsFocused] = useState(false);
 
     const toggleSecure = () => setIsSecure((prev) => !prev);
 
     return (
-      <View style={styles.wrapper}>
+      <View style={s.wrapper}>
         <View
           style={[
-            styles.container,
-            isFocused && !error && styles.containerFocused,
-            error ? styles.containerError : null,
-            multiline && styles.containerMultiline,
+            s.container,
+            isFocused && !error && s.containerFocused,
+            error ? s.containerError : null,
+            multiline && s.containerMultiline,
           ]}
         >
           {icon && (
             <Ionicons
               name={icon}
               size={20}
-              color={error ? theme.colors.error : isFocused ? theme.colors.primary : theme.colors.textLight}
-              style={[styles.icon, multiline && { alignSelf: 'flex-start', marginTop: 14 }]}
+              color={error ? colors.error : isFocused ? colors.primary : colors.textLight}
+              style={[s.icon, multiline && { alignSelf: 'flex-start', marginTop: 14 }]}
             />
           )}
 
           <TextInput
             ref={ref}
             style={[
-              styles.input,
+              s.input,
               { outlineStyle: 'none' as any },
-              multiline && styles.inputMultiline,
+              multiline && s.inputMultiline,
               style,
             ]}
-            placeholderTextColor={theme.colors.textLight}
+            placeholderTextColor={colors.textLight}
             secureTextEntry={isSecure}
             accessibilityLabel={rest.placeholder}
             multiline={multiline}
@@ -75,19 +78,19 @@ export const Input = forwardRef<TextInput, InputProps>(
               <Ionicons
                 name={isSecure ? 'eye-off-outline' : 'eye-outline'}
                 size={20}
-                color={theme.colors.textLight}
+                color={colors.textLight}
               />
             </TouchableOpacity>
           )}
         </View>
 
-        {typeof error === 'string' && error ? <Text style={styles.errorText}>{error}</Text> : null}
+        {typeof error === 'string' && error ? <Text style={s.errorText}>{error}</Text> : null}
       </View>
     );
   }
 );
 
-const styles = StyleSheet.create({
+const styles = (colors: ThemeColors) => StyleSheet.create({
   wrapper: {
     width: '100%',
     marginBottom: 16,
@@ -96,17 +99,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     height: 52,
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   containerError: {
-    borderColor: theme.colors.error,
+    borderColor: colors.error,
   },
   containerFocused: {
-    borderColor: theme.colors.primary,
+    borderColor: colors.primary,
   },
   icon: {
     marginRight: 10,
@@ -114,7 +117,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
-    color: theme.colors.text,
+    color: colors.text,
     height: '100%',
   },
   containerMultiline: {
@@ -129,7 +132,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   errorText: {
-    color: theme.colors.error,
+    color: colors.error,
     fontSize: 13,
     marginTop: 4,
     marginLeft: 4,

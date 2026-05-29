@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { theme } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
+import { ThemeColors } from '../../constants/theme';
 
 const FOOTER_LINKS = [
   'Sobre',
@@ -12,24 +13,27 @@ const FOOTER_LINKS = [
 ];
 
 export function WebFooter() {
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
+
   return (
-    <View style={styles.container}>
-      <View style={styles.inner}>
-        <View style={styles.linksRow}>
+    <View style={s.container}>
+      <View style={s.inner}>
+        <View style={s.linksRow}>
           {FOOTER_LINKS.map((label, index) => (
             <TouchableOpacity
               key={label}
               accessibilityRole="link"
               activeOpacity={0.7}
             >
-              <Text style={styles.linkText}>{label}</Text>
+              <Text style={s.linkText}>{label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <View style={styles.divider} />
+        <View style={s.divider} />
 
-        <Text style={styles.copyright}>
+        <Text style={s.copyright}>
           © 2026 ProEstoque — Todos os direitos reservados
         </Text>
       </View>
@@ -37,12 +41,12 @@ export function WebFooter() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     width: '100%',
-    backgroundColor: theme.colors.surface,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    borderTopColor: colors.border,
     paddingVertical: 32,
     paddingHorizontal: 32,
     marginTop: 15,
@@ -63,16 +67,16 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: 14,
     fontWeight: '500',
-    color: theme.colors.text,
+    color: colors.text,
   },
   divider: {
     width: '100%',
     height: 1,
-    backgroundColor: theme.colors.border,
+    backgroundColor: colors.border,
     marginVertical: 4,
   },
   copyright: {
     fontSize: 13,
-    color: theme.colors.textLight,
+    color: colors.textLight,
   },
 });

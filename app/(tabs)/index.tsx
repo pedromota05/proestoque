@@ -16,7 +16,8 @@ import { WebFooter } from '../../src/components/web/WebFooter';
 import { LoadingView } from '../../src/components/LoadingView';
 import { ProdutoListaSkeleton } from '../../src/components/ProdutoSkeleton';
 import { ErrorView } from '../../src/components/ErrorView';
-import { theme } from '../../src/constants/theme';
+import { useTheme } from '../../src/contexts/ThemeContext';
+import { ThemeColors } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useProducts } from '../../src/contexts/ProductsContext';
 import { useCategorias } from '../../src/hooks/useCategorias';
@@ -48,26 +49,26 @@ function getStatusEstoque(produto: Produto): StatusEstoque {
   return 'normal';
 }
 
-const STATUS_CONFIG: Record<
-  StatusEstoque,
-  { label: string; cor: string; fundo: string }
-> = {
-  normal: {
-    label: 'Normal',
-    cor: theme.colors.successText,
-    fundo: theme.colors.successBackground,
-  },
-  baixo: {
-    label: 'Baixo',
-    cor: theme.colors.warningText,
-    fundo: theme.colors.warningBackground,
-  },
-  sem_estoque: {
-    label: 'Sem estoque',
-    cor: theme.colors.error,
-    fundo: theme.colors.errorBackground,
-  },
-};
+function getStatusConfig(status: StatusEstoque, colors: ThemeColors) {
+  const configs: Record<StatusEstoque, { label: string; cor: string; fundo: string }> = {
+    normal: {
+      label: 'Normal',
+      cor: colors.successText,
+      fundo: colors.successBackground,
+    },
+    baixo: {
+      label: 'Baixo',
+      cor: colors.warningText,
+      fundo: colors.warningBackground,
+    },
+    sem_estoque: {
+      label: 'Sem estoque',
+      cor: colors.error,
+      fundo: colors.errorBackground,
+    },
+  };
+  return configs[status];
+}
 
 function getCategoriaIcone(categoriaId: string, categorias: Categoria[]): string {
   return categorias.find((c) => c.id === categoriaId)?.icone ?? 'cube-outline';
@@ -75,31 +76,33 @@ function getCategoriaIcone(categoriaId: string, categorias: Categoria[]): string
 
 // ─── Componentes internos ───
 function ProdutoCard({ produto, categorias }: { produto: Produto; categorias: Categoria[] }) {
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
   const status = getStatusEstoque(produto);
-  const config = STATUS_CONFIG[status];
+  const config = getStatusConfig(status, colors);
   const icone = getCategoriaIcone(produto.categoriaId, categorias);
 
   return (
-    <View style={styles.produtoCard}>
-      <View style={styles.produtoIconeWrapper}>
+    <View style={s.produtoCard}>
+      <View style={s.produtoIconeWrapper}>
         <Ionicons
           name={icone as keyof typeof Ionicons.glyphMap}
           size={22}
-          color={theme.colors.primary}
+          color={colors.primary}
         />
       </View>
 
-      <View style={styles.produtoInfo}>
-        <Text style={styles.produtoNome} numberOfLines={1}>
+      <View style={s.produtoInfo}>
+        <Text style={s.produtoNome} numberOfLines={1}>
           {produto.nome}
         </Text>
-        <Text style={styles.produtoQtd}>
+        <Text style={s.produtoQtd}>
           {produto.quantidade} {produto.unidade}
         </Text>
       </View>
 
-      <View style={[styles.badge, { backgroundColor: config.fundo }]}>
-        <Text style={[styles.badgeText, { color: config.cor }]}>
+      <View style={[s.badge, { backgroundColor: config.fundo }]}>
+        <Text style={[s.badgeText, { color: config.cor }]}>
           {config.label}
         </Text>
       </View>
@@ -118,6 +121,9 @@ function AlertaEstoqueCritico({
   mostrarTodos,
   onToggle,
 }: AlertaEstoqueCriticoProps) {
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
+
   if (produtos.length === 0) return null;
 
   const MAX_VISIVEIS = 3;
@@ -127,25 +133,25 @@ function AlertaEstoqueCritico({
   const temMais = produtos.length > MAX_VISIVEIS;
 
   return (
-    <View style={styles.alertaContainer}>
-      <View style={styles.alertaHeader}>
+    <View style={s.alertaContainer}>
+      <View style={s.alertaHeader}>
         <Ionicons
           name="warning-outline"
           size={20}
-          color={theme.colors.error}
+          color={colors.error}
         />
-        <Text style={styles.alertaTitulo}>Estoque crítico</Text>
-        <View style={styles.alertaContador}>
-          <Text style={styles.alertaContadorText}>{produtos.length}</Text>
+        <Text style={s.alertaTitulo}>Estoque crítico</Text>
+        <View style={s.alertaContador}>
+          <Text style={s.alertaContadorText}>{produtos.length}</Text>
         </View>
       </View>
 
       {produtosVisiveis.map((p) => (
-        <View key={p.id} style={styles.alertaItem}>
-          <Text style={styles.alertaItemNome} numberOfLines={1}>
+        <View key={p.id} style={s.alertaItem}>
+          <Text style={s.alertaItemNome} numberOfLines={1}>
             {p.nome}
           </Text>
-          <Text style={styles.alertaItemQtd}>
+          <Text style={s.alertaItemQtd}>
             {p.quantidade} / {p.quantidadeMinima}
           </Text>
         </View>
@@ -153,11 +159,11 @@ function AlertaEstoqueCritico({
 
       {temMais && (
         <TouchableOpacity
-          style={styles.alertaVerTodos}
+          style={s.alertaVerTodos}
           activeOpacity={0.7}
           onPress={onToggle}
         >
-          <Text style={styles.alertaVerTodosText}>
+          <Text style={s.alertaVerTodosText}>
             {mostrarTodos ? 'Ver menos ↑' : 'Ver todos →'}
           </Text>
         </TouchableOpacity>
@@ -168,6 +174,8 @@ function AlertaEstoqueCritico({
 
 export default function HomeScreen() {
   const { user } = useAuth();
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
   const { produtos, recarregar, isLoading, error } = useProducts();
   const { categorias, isLoading: isLoadingCategorias, recarregar: recarregarCategorias } = useCategorias();
   const router = useRouter();
@@ -211,35 +219,35 @@ export default function HomeScreen() {
         titulo: 'Produtos',
         valor: String(produtos.length),
         icone: 'cube-outline' as keyof typeof Ionicons.glyphMap,
-        corIcone: theme.colors.primary,
-        corFundo: theme.colors.primaryLight,
+        corIcone: colors.primary,
+        corFundo: colors.primaryLight,
       },
       {
         id: 'card-alertas',
         titulo: 'Alertas',
         valor: String(produtosBaixoEstoque.length),
         icone: 'alert-circle-outline' as keyof typeof Ionicons.glyphMap,
-        corIcone: theme.colors.error,
-        corFundo: theme.colors.errorBackground,
+        corIcone: colors.error,
+        corFundo: colors.errorBackground,
       },
       {
         id: 'card-categorias',
         titulo: 'Categorias',
         valor: String(categorias.length),
         icone: 'grid-outline' as keyof typeof Ionicons.glyphMap,
-        corIcone: theme.colors.accent,
-        corFundo: theme.colors.accentLight,
+        corIcone: colors.accent,
+        corFundo: colors.accentLight,
       },
       {
         id: 'card-estoque',
         titulo: 'Em Estoque',
         valor: formatarPreco(totalEstoque),
         icone: 'cash-outline' as keyof typeof Ionicons.glyphMap,
-        corIcone: theme.colors.warning,
-        corFundo: theme.colors.warningBackground,
+        corIcone: colors.warning,
+        corFundo: colors.warningBackground,
       },
     ],
-    [produtosBaixoEstoque, totalEstoque, produtos.length, categorias.length],
+    [produtosBaixoEstoque, totalEstoque, produtos.length, categorias.length, colors],
   );
 
   const onRefresh = useCallback(async () => {
@@ -257,37 +265,37 @@ export default function HomeScreen() {
   };
 
   const ListHeader = (
-    <View style={styles.headerWrapper}>
+    <View style={s.headerWrapper}>
       {isDesktop ? (
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <View>
-            <Text style={styles.greeting}>
+            <Text style={s.greeting}>
               {saudacao}, {nomeFormatado} 👋
             </Text>
-            <Text style={styles.subtitle}>Visão geral do estoque</Text>
+            <Text style={s.subtitle}>Visão geral do estoque</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
+            <View style={s.avatar}>
+              <Text style={s.avatarText}>
                 {user?.nome?.charAt(0).toUpperCase()}
               </Text>
             </View>
             <TouchableOpacity
-              style={styles.addButton}
+              style={s.addButton}
               activeOpacity={0.75}
               accessibilityLabel="Adicionar produto"
               onPress={() => router.push('/produtos/novo' as any)}
             >
-              <Ionicons name="add" size={26} color={theme.colors.surface} />
+              <Ionicons name="add" size={26} color={colors.surface} />
             </TouchableOpacity>
           </View>
         </View>
       ) : (
         <>
-          <View style={styles.greetingRow}>
-            <View style={styles.greetingTexts}>
+          <View style={s.greetingRow}>
+            <View style={s.greetingTexts}>
               <Text 
-                style={[styles.greeting, { fontSize: 22, lineHeight: 30 }]} 
+                style={[s.greeting, { fontSize: 22, lineHeight: 30 }]} 
                 numberOfLines={2}
                 adjustsFontSizeToFit
                 minimumFontScale={0.8}
@@ -296,35 +304,35 @@ export default function HomeScreen() {
               </Text>
             </View>
 
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
+            <View style={s.avatar}>
+              <Text style={s.avatarText}>
                 {user?.nome?.charAt(0).toUpperCase()}
               </Text>
             </View>
           </View>
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 24 }}>
-            <Text style={styles.subtitle}>Visão geral do estoque</Text>
+            <Text style={s.subtitle}>Visão geral do estoque</Text>
 
             <TouchableOpacity
-              style={styles.addButton}
+              style={s.addButton}
               activeOpacity={0.75}
               accessibilityLabel="Adicionar produto"
               onPress={() => router.push('/produtos/novo' as any)}
             >
-              <Ionicons name="add" size={26} color={theme.colors.surface} />
+              <Ionicons name="add" size={26} color={colors.surface} />
             </TouchableOpacity>
           </View>
         </>
       )}
 
-      <View style={styles.cardsGrid}>
+      <View style={s.cardsGrid}>
         {resumoCards.map((card) => (
-          <View key={card.id} style={styles.resumoCard}>
-            <View style={styles.resumoCardInner}>
+          <View key={card.id} style={s.resumoCard}>
+            <View style={s.resumoCardInner}>
               <View
                 style={[
-                  styles.resumoIconWrapper,
+                  s.resumoIconWrapper,
                   { backgroundColor: card.corFundo },
                 ]}
               >
@@ -334,8 +342,8 @@ export default function HomeScreen() {
                   color={card.corIcone}
                 />
               </View>
-              <Text style={styles.resumoValor} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>{card.valor}</Text>
-              <Text style={styles.resumoTitulo}>{card.titulo}</Text>
+              <Text style={s.resumoValor} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>{card.valor}</Text>
+              <Text style={s.resumoTitulo}>{card.titulo}</Text>
             </View>
           </View>
         ))}
@@ -347,9 +355,9 @@ export default function HomeScreen() {
         onToggle={() => setMostrarTodosAlertas(!mostrarTodosAlertas)}
       />
 
-      <View style={styles.secaoHeader}>
-        <Text style={styles.secaoTitulo}>Produtos recentes</Text>
-        <Text style={styles.secaoContador}>
+      <View style={s.secaoHeader}>
+        <Text style={s.secaoTitulo}>Produtos recentes</Text>
+        <Text style={s.secaoContador}>
           {produtosRecentes.length} itens
         </Text>
       </View>
@@ -359,18 +367,18 @@ export default function HomeScreen() {
   // ── Render ───
   const renderItem = useCallback(
     ({ item }: { item: Produto }) => (
-      <View style={styles.itemWrapper}>
+      <View style={s.itemWrapper}>
         <ProdutoCard produto={item} categorias={categorias} />
       </View>
     ),
-    [categorias],
+    [categorias, s],
   );
 
   const keyExtractor = useCallback((item: Produto) => item.id, []);
 
   if ((isLoading || isLoadingCategorias) && produtos.length === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={s.safe}>
         {ListHeader}
         <ProdutoListaSkeleton count={3} />
       </SafeAreaView>
@@ -382,7 +390,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={s.safe}>
       <FlatList
         style={{ flex: 1 }}
         data={produtosRecentes}
@@ -397,14 +405,14 @@ export default function HomeScreen() {
           ) : undefined
         }
         ListFooterComponentStyle={isWeb ? { flexGrow: 1 } : undefined}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={s.listContent}
         showsVerticalScrollIndicator={isWeb}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={theme.colors.primary}
-            colors={[theme.colors.primary]}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
       />
@@ -413,10 +421,10 @@ export default function HomeScreen() {
 }
 
 const CARD_GAP = 12;
-const styles = StyleSheet.create({
+const styles = (colors: ThemeColors) => StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   listContent: {
     paddingBottom: 0,
@@ -448,17 +456,17 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 26,
     fontWeight: '700',
-    color: theme.colors.text,
+    color: colors.text,
   },
   subtitle: {
     fontSize: 15,
-    color: theme.colors.textLight,
+    color: colors.textLight,
   },
   addButton: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -474,11 +482,11 @@ const styles = StyleSheet.create({
     marginBottom: CARD_GAP,
   },
   resumoCardInner: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
   },
   resumoIconWrapper: {
     width: 42,
@@ -491,16 +499,16 @@ const styles = StyleSheet.create({
   resumoValor: {
     fontSize: 22,
     fontWeight: '700',
-    color: theme.colors.text,
+    color: colors.text,
   },
   resumoTitulo: {
     fontSize: 13,
-    color: theme.colors.textLight,
+    color: colors.textLight,
     fontWeight: '500',
     marginTop: 2,
   },
   alertaContainer: {
-    backgroundColor: theme.colors.errorBackground,
+    backgroundColor: colors.errorBackground,
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
@@ -513,12 +521,12 @@ const styles = StyleSheet.create({
   alertaTitulo: {
     fontSize: 15,
     fontWeight: '700',
-    color: theme.colors.error,
+    color: colors.error,
     marginLeft: 6,
     flex: 1,
   },
   alertaContador: {
-    backgroundColor: theme.colors.error,
+    backgroundColor: colors.error,
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -526,7 +534,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   alertaContadorText: {
-    color: theme.colors.surface,
+    color: colors.surface,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -540,12 +548,12 @@ const styles = StyleSheet.create({
   alertaItemNome: {
     flex: 1,
     fontSize: 14,
-    color: theme.colors.text,
+    color: colors.text,
     fontWeight: '500',
   },
   alertaItemQtd: {
     fontSize: 13,
-    color: theme.colors.error,
+    color: colors.error,
     fontWeight: '700',
     marginLeft: 8,
   },
@@ -556,7 +564,7 @@ const styles = StyleSheet.create({
   alertaVerTodosText: {
     fontSize: 13,
     fontWeight: '600',
-    color: theme.colors.error,
+    color: colors.error,
   },
   secaoHeader: {
     flexDirection: 'row',
@@ -567,28 +575,28 @@ const styles = StyleSheet.create({
   secaoTitulo: {
     fontSize: 18,
     fontWeight: '700',
-    color: theme.colors.text,
+    color: colors.text,
   },
   secaoContador: {
     fontSize: 13,
-    color: theme.colors.textLight,
+    color: colors.textLight,
     fontWeight: '500',
   },
   produtoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
   },
   produtoIconeWrapper: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: theme.colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -600,11 +608,11 @@ const styles = StyleSheet.create({
   produtoNome: {
     fontSize: 15,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: colors.text,
   },
   produtoQtd: {
     fontSize: 13,
-    color: theme.colors.textLight,
+    color: colors.textLight,
     marginTop: 2,
   },
   badge: {
@@ -620,13 +628,13 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
   },
   avatarText: {
-    color: theme.colors.surface,
+    color: colors.surface,
     fontSize: 18,
     fontWeight: '700',
   },

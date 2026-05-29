@@ -15,7 +15,8 @@ import Toast from 'react-native-toast-message';
 import { ImagePickerField } from '../../../src/components/ImagePickerField';
 import { Input } from '../../../src/components/Input';
 import { Button } from '../../../src/components/Button';
-import { theme } from '../../../src/constants/theme';
+import { useTheme } from '../../../src/contexts/ThemeContext';
+import { ThemeColors } from '../../../src/constants/theme';
 import { useProducts } from '../../../src/contexts/ProductsContext';
 import { useCategorias } from '../../../src/hooks/useCategorias';
 import {
@@ -33,6 +34,8 @@ const UNIDADES = [
 
 export default function NovoProdutoScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
   const { adicionarProduto } = useProducts();
   const { categorias } = useCategorias();
   const [precoTexto, setPrecoTexto] = useState('');
@@ -92,17 +95,17 @@ export default function NovoProdutoScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={s.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={s.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={true}
         style={Platform.OS === 'web' ? ({ overflowY: 'scroll' } as any) : undefined}
       >
-        <View style={styles.formWrapper}>
-          <View style={[styles.formContainer, Platform.OS === 'web' && styles.webCard]}>
+        <View style={s.formWrapper}>
+          <View style={[s.formContainer, Platform.OS === 'web' && s.webCard]}>
           {/* Foto */}
           <Controller
             control={control}
@@ -115,7 +118,7 @@ export default function NovoProdutoScreen() {
           />
 
           {/* Nome */}
-          <Text style={styles.label}>Nome do produto</Text>
+          <Text style={s.label}>Nome do produto</Text>
           <Controller
             control={control}
             name="nome"
@@ -133,28 +136,28 @@ export default function NovoProdutoScreen() {
           />
 
           {/* Categoria */}
-          <Text style={styles.label}>Categoria</Text>
+          <Text style={s.label}>Categoria</Text>
           <Controller
             control={control}
             name="categoriaId"
             render={({ field: { onChange, value } }) => (
-              <View style={styles.chipsRow}>
+              <View style={s.chipsRow}>
                 {categorias.map((cat) => {
                   const ativo = value === cat.id;
                   return (
                     <TouchableOpacity
                       key={cat.id}
                       style={[
-                        styles.chip,
-                        ativo ? styles.chipAtivo : styles.chipInativo,
+                        s.chip,
+                        ativo ? s.chipAtivo : s.chipInativo,
                       ]}
                       activeOpacity={0.7}
                       onPress={() => onChange(cat.id)}
                     >
                       <Text
                         style={[
-                          styles.chipText,
-                          ativo ? styles.chipTextAtivo : styles.chipTextInativo,
+                          s.chipText,
+                          ativo ? s.chipTextAtivo : s.chipTextInativo,
                         ]}
                       >
                         {cat.nome}
@@ -163,7 +166,7 @@ export default function NovoProdutoScreen() {
                   );
                 })}
                 {errors.categoriaId && (
-                  <Text style={styles.errorText}>
+                  <Text style={s.errorText}>
                     {errors.categoriaId.message}
                   </Text>
                 )}
@@ -172,9 +175,9 @@ export default function NovoProdutoScreen() {
           />
 
           {/* Quantidade e Quantidade Mínima */}
-          <View style={styles.row}>
-            <View style={styles.halfField}>
-              <Text style={styles.label}>Quantidade</Text>
+          <View style={s.row}>
+            <View style={s.halfField}>
+              <Text style={s.label}>Quantidade</Text>
               <Controller
                 control={control}
                 name="quantidade"
@@ -192,8 +195,8 @@ export default function NovoProdutoScreen() {
               />
             </View>
 
-            <View style={styles.halfField}>
-              <Text style={styles.label}>Qtd. Mínima</Text>
+            <View style={s.halfField}>
+              <Text style={s.label}>Qtd. Mínima</Text>
               <Controller
                 control={control}
                 name="quantidadeMinima"
@@ -213,7 +216,7 @@ export default function NovoProdutoScreen() {
           </View>
 
           {/* Preço */}
-          <Text style={styles.label}>Preço (R$)</Text>
+          <Text style={s.label}>Preço (R$)</Text>
           <Controller
             control={control}
             name="preco"
@@ -235,28 +238,28 @@ export default function NovoProdutoScreen() {
           />
 
           {/* Unidade */}
-          <Text style={styles.label}>Unidade</Text>
+          <Text style={s.label}>Unidade</Text>
           <Controller
             control={control}
             name="unidade"
             render={({ field: { onChange, value } }) => (
-              <View style={styles.chipsRow}>
+              <View style={s.chipsRow}>
                 {UNIDADES.map((u) => {
                   const ativo = value === u.value;
                   return (
                     <TouchableOpacity
                       key={u.value}
                       style={[
-                        styles.chip,
-                        ativo ? styles.chipAtivo : styles.chipInativo,
+                        s.chip,
+                        ativo ? s.chipAtivo : s.chipInativo,
                       ]}
                       activeOpacity={0.7}
                       onPress={() => onChange(u.value)}
                     >
                       <Text
                         style={[
-                          styles.chipText,
-                          ativo ? styles.chipTextAtivo : styles.chipTextInativo,
+                          s.chipText,
+                          ativo ? s.chipTextAtivo : s.chipTextInativo,
                         ]}
                       >
                         {u.label}
@@ -265,7 +268,7 @@ export default function NovoProdutoScreen() {
                   );
                 })}
                 {errors.unidade && (
-                  <Text style={styles.errorText}>
+                  <Text style={s.errorText}>
                     {errors.unidade.message}
                   </Text>
                 )}
@@ -274,7 +277,7 @@ export default function NovoProdutoScreen() {
           />
 
           {/* Observação */}
-          <Text style={styles.label}>Observação (opcional)</Text>
+          <Text style={s.label}>Observação (opcional)</Text>
           <Controller
             control={control}
             name="observacao"
@@ -306,10 +309,10 @@ export default function NovoProdutoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -325,14 +328,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   webCard: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 32,
     maxWidth: 600,
     width: '100%',
     alignSelf: 'center' as any,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
     marginTop: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -343,7 +346,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: colors.text,
     marginBottom: 6,
   },
   row: {
@@ -365,25 +368,25 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   chipAtivo: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.primary,
   },
   chipInativo: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
   },
   chipText: {
     fontSize: 13,
     fontWeight: '600',
   },
   chipTextAtivo: {
-    color: theme.colors.surface,
+    color: colors.surface,
   },
   chipTextInativo: {
-    color: theme.colors.textLight,
+    color: colors.textLight,
   },
   errorText: {
-    color: theme.colors.error,
+    color: colors.error,
     fontSize: 13,
     marginTop: 4,
     marginLeft: 4,

@@ -1,13 +1,17 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Skeleton } from './Skeleton';
-import { theme } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { ThemeColors } from '../constants/theme';
 
 export function ProdutoSkeletonItem({ layoutColuna = false }: { layoutColuna?: boolean }) {
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
+
   if (layoutColuna) {
     return (
-      <View style={[styles.card, styles.cardColuna]}>
-        <Skeleton width={44} height={44} borderRadius={12} style={styles.iconeColuna} />
+      <View style={[s.card, s.cardColuna]}>
+        <Skeleton width={44} height={44} borderRadius={12} style={s.iconeColuna} />
         <Skeleton width="80%" height={16} style={{ marginBottom: 8 }} />
         <Skeleton width="60%" height={14} style={{ marginBottom: 16 }} />
         <Skeleton width={60} height={24} borderRadius={8} />
@@ -15,10 +19,10 @@ export function ProdutoSkeletonItem({ layoutColuna = false }: { layoutColuna?: b
     );
   }
 
-  return (
-    <View style={styles.card}>
-      <Skeleton width={44} height={44} borderRadius={12} style={styles.iconeRow} />
-      <View style={styles.info}>
+    return (
+      <View style={s.card}>
+        <Skeleton width={44} height={44} borderRadius={12} style={s.iconeRow} />
+        <View style={s.info}>
         <Skeleton width="70%" height={16} style={{ marginBottom: 6 }} />
         <Skeleton width="40%" height={14} />
       </View>
@@ -28,10 +32,13 @@ export function ProdutoSkeletonItem({ layoutColuna = false }: { layoutColuna?: b
 }
 
 export function ProdutoListaSkeleton({ count = 6, layoutColuna = false }: { count?: number, layoutColuna?: boolean }) {
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
+
   return (
-    <View style={layoutColuna ? styles.listaColuna : styles.listaRow}>
+    <View style={layoutColuna ? s.listaColuna : s.listaRow}>
       {Array.from({ length: count }).map((_, index) => (
-        <View key={index} style={layoutColuna ? styles.itemColunaWrapper : styles.itemRowWrapper}>
+        <View key={index} style={layoutColuna ? s.itemColunaWrapper : s.itemRowWrapper}>
           <ProdutoSkeletonItem layoutColuna={layoutColuna} />
         </View>
       ))}
@@ -39,15 +46,15 @@ export function ProdutoListaSkeleton({ count = 6, layoutColuna = false }: { coun
   );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: ThemeColors) => StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
   },
   cardColuna: {
     flexDirection: 'column',

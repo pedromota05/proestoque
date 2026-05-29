@@ -19,7 +19,8 @@ import { WebFooter } from '../../../src/components/web/WebFooter';
 import { LoadingView } from '../../../src/components/LoadingView';
 import { ProdutoListaSkeleton } from '../../../src/components/ProdutoSkeleton';
 import { ErrorView } from '../../../src/components/ErrorView';
-import { theme } from '../../../src/constants/theme';
+import { useTheme } from '../../../src/contexts/ThemeContext';
+import { ThemeColors } from '../../../src/constants/theme';
 import { useProducts } from '../../../src/contexts/ProductsContext';
 import { useCategorias } from '../../../src/hooks/useCategorias';
 import type { Produto, Categoria } from '../../../src/types';
@@ -43,26 +44,26 @@ function getStatusEstoque(produto: Produto): StatusEstoque {
   return 'normal';
 }
 
-const STATUS_CONFIG: Record<
-  StatusEstoque,
-  { label: string; cor: string; fundo: string }
-> = {
-  normal: {
-    label: 'Normal',
-    cor: theme.colors.successText,
-    fundo: theme.colors.successBackground,
-  },
-  baixo: {
-    label: 'Baixo',
-    cor: theme.colors.warningText,
-    fundo: theme.colors.warningBackground,
-  },
-  sem_estoque: {
-    label: 'Sem estoque',
-    cor: theme.colors.error,
-    fundo: theme.colors.errorBackground,
-  },
-};
+function getStatusConfig(status: StatusEstoque, colors: ThemeColors) {
+  const configs: Record<StatusEstoque, { label: string; cor: string; fundo: string }> = {
+    normal: {
+      label: 'Normal',
+      cor: colors.successText,
+      fundo: colors.successBackground,
+    },
+    baixo: {
+      label: 'Baixo',
+      cor: colors.warningText,
+      fundo: colors.warningBackground,
+    },
+    sem_estoque: {
+      label: 'Sem estoque',
+      cor: colors.error,
+      fundo: colors.errorBackground,
+    },
+  };
+  return configs[status];
+}
 
 function getCategoriaIcone(categoriaId: string, categorias: Categoria[]): string {
   return categorias.find((c) => c.id === categoriaId)?.icone ?? 'cube-outline';
@@ -80,8 +81,10 @@ function ProdutoCard({
   layoutColuna?: boolean;
   onPress?: () => void;
 }) {
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
   const status = getStatusEstoque(produto);
-  const config = STATUS_CONFIG[status];
+  const config = getStatusConfig(status, colors);
   const icone = getCategoriaIcone(produto.categoriaId, categorias);
 
   return (
@@ -89,49 +92,49 @@ function ProdutoCard({
       activeOpacity={0.7}
       onPress={onPress}
       style={[
-        styles.produtoCard,
-        layoutColuna && styles.produtoCardColuna,
+        s.produtoCard,
+        layoutColuna && s.produtoCardColuna,
       ]}
     >
       {produto.foto ? (
         <Image
           source={{ uri: produto.foto }}
           style={[
-            styles.produtoFoto,
-            !layoutColuna && styles.iconeRow,
-            layoutColuna && styles.iconeColuna,
+            s.produtoFoto,
+            !layoutColuna && s.iconeRow,
+            layoutColuna && s.iconeColuna,
           ]}
         />
       ) : (
         <View
           style={[
-            styles.produtoIconeWrapper,
-            !layoutColuna && styles.iconeRow,
-            layoutColuna && styles.iconeColuna,
+            s.produtoIconeWrapper,
+            !layoutColuna && s.iconeRow,
+            layoutColuna && s.iconeColuna,
           ]}
         >
           <Ionicons
             name={icone as keyof typeof Ionicons.glyphMap}
             size={22}
-            color={theme.colors.primary}
+            color={colors.primary}
           />
         </View>
       )}
 
       <View
         style={[
-          styles.produtoInfo,
-          layoutColuna && styles.produtoInfoColuna,
+          s.produtoInfo,
+          layoutColuna && s.produtoInfoColuna,
         ]}
       >
         <Text
-          style={[styles.produtoNome, layoutColuna && styles.textCenter]}
+          style={[s.produtoNome, layoutColuna && s.textCenter]}
           numberOfLines={layoutColuna ? 2 : 1}
         >
           {produto.nome}
         </Text>
         <Text
-          style={[styles.produtoQtd, layoutColuna && styles.textCenter]}
+          style={[s.produtoQtd, layoutColuna && s.textCenter]}
         >
           {produto.quantidade} {produto.unidade}
         </Text>
@@ -139,12 +142,12 @@ function ProdutoCard({
 
       <View
         style={[
-          styles.badge,
+          s.badge,
           { backgroundColor: config.fundo },
-          layoutColuna && styles.badgeColuna,
+          layoutColuna && s.badgeColuna,
         ]}
       >
-        <Text style={[styles.badgeText, { color: config.cor }]}>
+        <Text style={[s.badgeText, { color: config.cor }]}>
           {config.label}
         </Text>
       </View>
@@ -153,16 +156,19 @@ function ProdutoCard({
 }
 
 function ListaVazia() {
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
+
   return (
-    <View style={styles.itemWrapper}>
-      <View style={styles.vazioContainer}>
+    <View style={s.itemWrapper}>
+      <View style={s.vazioContainer}>
         <Ionicons
           name="search-outline"
           size={56}
-          color={theme.colors.border}
+          color={colors.border}
         />
-        <Text style={styles.vazioTitulo}>Nenhum produto encontrado</Text>
-        <Text style={styles.vazioSubtitulo}>
+        <Text style={s.vazioTitulo}>Nenhum produto encontrado</Text>
+        <Text style={s.vazioSubtitulo}>
           Tente ajustar a busca ou alterar o filtro de categoria.
         </Text>
       </View>
@@ -173,6 +179,8 @@ function ListaVazia() {
 // ─── Componente principal ───
 export default function ProdutosScreen() {
   const { produtos, recarregar, isLoading, error } = useProducts();
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
   const { categorias, isLoading: isLoadingCategorias, recarregar: recarregarCategorias } = useCategorias();
   const router = useRouter();
 
@@ -245,7 +253,7 @@ export default function ProdutosScreen() {
 
   const renderAgrupItem = useCallback(
     ({ item }: { item: Produto }) => (
-      <View style={styles.itemWrapper}>
+      <View style={s.itemWrapper}>
         <ProdutoCard
           produto={item}
           categorias={categorias}
@@ -253,38 +261,38 @@ export default function ProdutosScreen() {
         />
       </View>
     ),
-    [router, categorias],
+    [router, categorias, s],
   );
 
   const keyExtractor = useCallback((item: Produto) => item.id, []);
 
   const ListHeader = (
-    <View style={styles.headerWrapper}>
-      <View style={styles.titleRow}>
-        <Text style={styles.titulo}>Produtos</Text>
+    <View style={s.headerWrapper}>
+      <View style={s.titleRow}>
+        <Text style={s.titulo}>Produtos</Text>
         {isWeb && (
           <TouchableOpacity
-            style={styles.addButton}
+            style={s.addButton}
             activeOpacity={0.75}
             accessibilityLabel="Adicionar produto"
             onPress={() => router.push('/produtos/novo' as any)}
           >
-            <Ionicons name="add" size={26} color={theme.colors.surface} />
+            <Ionicons name="add" size={26} color={colors.surface} />
           </TouchableOpacity>
         )}
       </View>
 
-      <View style={styles.searchContainer}>
+      <View style={s.searchContainer}>
         <Ionicons
           name="search-outline"
           size={20}
-          color={theme.colors.textLight}
-          style={styles.searchIcon}
+          color={colors.textLight}
+          style={s.searchIcon}
         />
         <TextInput
-          style={styles.searchInput}
+          style={s.searchInput}
           placeholder="Buscar produto..."
-          placeholderTextColor={theme.colors.textLight}
+          placeholderTextColor={colors.textLight}
           value={busca}
           onChangeText={setBusca}
           autoCapitalize="none"
@@ -300,29 +308,29 @@ export default function ProdutosScreen() {
             <Ionicons
               name="close-circle"
               size={20}
-              color={theme.colors.textLight}
+              color={colors.textLight}
             />
           </TouchableOpacity>
         )}
       </View>
 
-      <View style={styles.chipsRow}>
+      <View style={s.chipsRow}>
         {chips.map((chip) => {
           const ativo = categoriaSelecionada === chip.id;
           return (
             <TouchableOpacity
               key={chip.id ?? 'todos'}
               style={[
-                styles.chip,
-                ativo ? styles.chipAtivo : styles.chipInativo,
+                s.chip,
+                ativo ? s.chipAtivo : s.chipInativo,
               ]}
               activeOpacity={0.7}
               onPress={() => setCategoriaSelecionada(chip.id)}
             >
               <Text
                 style={[
-                  styles.chipText,
-                  ativo ? styles.chipTextAtivo : styles.chipTextInativo,
+                  s.chipText,
+                  ativo ? s.chipTextAtivo : s.chipTextInativo,
                 ]}
               >
                 {chip.nome}
@@ -332,11 +340,11 @@ export default function ProdutosScreen() {
         })}
       </View>
 
-      <View style={styles.toggleRow}>
+      <View style={s.toggleRow}>
         <TouchableOpacity
           style={[
-            styles.toggleBtn,
-            modoVisualizacao === 'grade' && styles.toggleBtnAtivo,
+            s.toggleBtn,
+            modoVisualizacao === 'grade' && s.toggleBtnAtivo,
           ]}
           activeOpacity={0.7}
           onPress={() => setModoVisualizacao('grade')}
@@ -346,17 +354,17 @@ export default function ProdutosScreen() {
             size={16}
             color={
               modoVisualizacao === 'grade'
-                ? theme.colors.surface
-                : theme.colors.textLight
+                ? colors.surface
+                : colors.textLight
             }
             style={{ marginRight: 6 }}
           />
           <Text
             style={[
-              styles.toggleText,
+              s.toggleText,
               modoVisualizacao === 'grade'
-                ? styles.toggleTextAtivo
-                : styles.toggleTextInativo,
+                ? s.toggleTextAtivo
+                : s.toggleTextInativo,
             ]}
           >
             Grade
@@ -365,8 +373,8 @@ export default function ProdutosScreen() {
 
         <TouchableOpacity
           style={[
-            styles.toggleBtn,
-            modoVisualizacao === 'agrupado' && styles.toggleBtnAtivo,
+            s.toggleBtn,
+            modoVisualizacao === 'agrupado' && s.toggleBtnAtivo,
           ]}
           activeOpacity={0.7}
           onPress={() => setModoVisualizacao('agrupado')}
@@ -376,17 +384,17 @@ export default function ProdutosScreen() {
             size={16}
             color={
               modoVisualizacao === 'agrupado'
-                ? theme.colors.surface
-                : theme.colors.textLight
+                ? colors.surface
+                : colors.textLight
             }
             style={{ marginRight: 6 }}
           />
           <Text
             style={[
-              styles.toggleText,
+              s.toggleText,
               modoVisualizacao === 'agrupado'
-                ? styles.toggleTextAtivo
-                : styles.toggleTextInativo,
+                ? s.toggleTextAtivo
+                : s.toggleTextInativo,
             ]}
           >
             Agrupado
@@ -394,8 +402,8 @@ export default function ProdutosScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.resultadoRow}>
-        <Text style={styles.resultadoLabel}>
+      <View style={s.resultadoRow}>
+        <Text style={s.resultadoLabel}>
           {produtosFiltrados.length}{' '}
           {produtosFiltrados.length === 1 ? 'produto' : 'produtos'}
         </Text>
@@ -415,14 +423,14 @@ export default function ProdutosScreen() {
     <RefreshControl
       refreshing={refreshing}
       onRefresh={onRefresh}
-      tintColor={theme.colors.primary}
-      colors={[theme.colors.primary]}
+      tintColor={colors.primary}
+      colors={[colors.primary]}
     />
   );
 
   if ((isLoading || isLoadingCategorias) && produtos.length === 0) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
+      <SafeAreaView style={s.safe} edges={['top']}>
         {ListHeader}
         <ProdutoListaSkeleton layoutColuna={layoutColuna} count={6} />
       </SafeAreaView>
@@ -434,7 +442,7 @@ export default function ProdutosScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={s.safe} edges={['top']}>
       {modoVisualizacao === 'grade' ? (
         <FlatList
           style={{ flex: 1 }}
@@ -442,12 +450,12 @@ export default function ProdutosScreen() {
           renderItem={renderGradeItem}
           keyExtractor={keyExtractor}
           numColumns={2}
-          columnWrapperStyle={styles.gridRow}
+          columnWrapperStyle={s.gridRow}
           ListHeaderComponent={ListHeader}
           ListEmptyComponent={ListaVazia}
           ListFooterComponent={listFooter}
           ListFooterComponentStyle={isWeb ? { flexGrow: 1 } : undefined}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={isWeb}
           refreshControl={refreshCtrl}
         />
@@ -458,19 +466,19 @@ export default function ProdutosScreen() {
           keyExtractor={keyExtractor}
           renderItem={renderAgrupItem}
           renderSectionHeader={({ section }) => (
-            <View style={styles.sectionHeaderWrapper}>
-              <View style={styles.sectionHeader}>
+            <View style={s.sectionHeaderWrapper}>
+              <View style={s.sectionHeader}>
                 <Ionicons
                   name={
                     (categorias.find((c) => c.id === section.categoriaId)
                       ?.icone ?? 'cube-outline') as keyof typeof Ionicons.glyphMap
                   }
                   size={18}
-                  color={theme.colors.primary}
+                  color={colors.primary}
                 />
-                <Text style={styles.sectionTitle}>{section.title}</Text>
-                <View style={styles.sectionBadge}>
-                  <Text style={styles.sectionBadgeText}>
+                <Text style={s.sectionTitle}>{section.title}</Text>
+                <View style={s.sectionBadge}>
+                  <Text style={s.sectionBadgeText}>
                     {section.data.length}
                   </Text>
                 </View>
@@ -481,7 +489,7 @@ export default function ProdutosScreen() {
           ListEmptyComponent={ListaVazia}
           ListFooterComponent={listFooter}
           ListFooterComponentStyle={isWeb ? { flexGrow: 1 } : undefined}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={isWeb}
           refreshControl={refreshCtrl}
           stickySectionHeadersEnabled={false}
@@ -491,22 +499,22 @@ export default function ProdutosScreen() {
       {/* FAB — apenas mobile */}
       {!isWeb && (
         <TouchableOpacity
-          style={styles.fab}
+          style={s.fab}
           activeOpacity={0.8}
           onPress={() => router.push('/produtos/novo' as any)}
           accessibilityLabel="Adicionar produto"
         >
-          <Ionicons name="add" size={28} color={theme.colors.surface} />
+          <Ionicons name="add" size={28} color={colors.surface} />
         </TouchableOpacity>
       )}
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: ThemeColors) => StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   listContent: {
     paddingBottom: isWeb ? 0 : 16,
@@ -542,23 +550,23 @@ const styles = StyleSheet.create({
   titulo: {
     fontSize: 26,
     fontWeight: '700',
-    color: theme.colors.text,
+    color: colors.text,
   },
   addButton: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
     paddingHorizontal: 14,
     height: 48,
     marginBottom: 16,
@@ -569,7 +577,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: theme.colors.text,
+    color: colors.text,
     paddingVertical: 0,
     outlineStyle: 'none' as any,
   },
@@ -585,22 +593,22 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   chipAtivo: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.primary,
   },
   chipInativo: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
   },
   chipText: {
     fontSize: 13,
     fontWeight: '600',
   },
   chipTextAtivo: {
-    color: theme.colors.surface,
+    color: colors.surface,
   },
   chipTextInativo: {
-    color: theme.colors.textLight,
+    color: colors.textLight,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -614,22 +622,22 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
     backgroundColor: 'transparent',
   },
   toggleBtnAtivo: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   toggleText: {
     fontSize: 13,
     fontWeight: '600',
   },
   toggleTextAtivo: {
-    color: theme.colors.surface,
+    color: colors.surface,
   },
   toggleTextInativo: {
-    color: theme.colors.textLight,
+    color: colors.textLight,
   },
   resultadoRow: {
     marginBottom: 12,
@@ -637,7 +645,7 @@ const styles = StyleSheet.create({
   resultadoLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: theme.colors.textLight,
+    color: colors.textLight,
   },
   sectionHeaderWrapper: {
     maxWidth: 1024,
@@ -653,16 +661,16 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 4,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: colors.border,
   },
   sectionTitle: {
     flex: 1,
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.text,
+    color: colors.text,
   },
   sectionBadge: {
-    backgroundColor: theme.colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -670,17 +678,17 @@ const styles = StyleSheet.create({
   sectionBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.primary,
+    color: colors.primary,
   },
   produtoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     padding: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: colors.border,
     flex: 1,
   },
   produtoCardColuna: {
@@ -694,7 +702,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: theme.colors.primaryLight,
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -722,11 +730,11 @@ const styles = StyleSheet.create({
   produtoNome: {
     fontSize: 15,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: colors.text,
   },
   produtoQtd: {
     fontSize: 13,
-    color: theme.colors.textLight,
+    color: colors.textLight,
     marginTop: 2,
   },
   textCenter: {
@@ -753,12 +761,12 @@ const styles = StyleSheet.create({
   vazioTitulo: {
     fontSize: 17,
     fontWeight: '600',
-    color: theme.colors.text,
+    color: colors.text,
     marginTop: 16,
   },
   vazioSubtitulo: {
     fontSize: 14,
-    color: theme.colors.textLight,
+    color: colors.textLight,
     textAlign: 'center',
     marginTop: 6,
     lineHeight: 20,
@@ -770,7 +778,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 6,

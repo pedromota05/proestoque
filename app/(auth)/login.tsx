@@ -14,11 +14,14 @@ import Toast from 'react-native-toast-message';
 import { Button } from '../../src/components/Button';
 import { Input } from '../../src/components/Input';
 import { LogoProEstoque } from '../../src/components/LogoProEstoque';
-import { theme } from '../../src/constants/theme';
+import { useTheme } from '../../src/contexts/ThemeContext';
+import { ThemeColors } from '../../src/constants/theme';
 import { useAuth } from '../../src/contexts/AuthContext';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const s = React.useMemo(() => styles(colors), [colors]);
   const { login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -70,19 +73,19 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={s.safe}>
       <KeyboardAvoidingView
-        style={styles.container}
+        style={s.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={[styles.innerContainer, Platform.OS === 'web' && styles.webCard]}>
-          <View style={styles.header}>
+        <View style={[s.innerContainer, Platform.OS === 'web' && s.webCard]}>
+          <View style={s.header}>
             <LogoProEstoque size="lg" />
-            <Text style={styles.subtitle}>Bem-vindo de volta</Text>
+            <Text style={s.subtitle}>Bem-vindo de volta</Text>
           </View>
 
-          <View style={styles.form}>
-            <View style={styles.inputWrapper}>
+          <View style={s.form}>
+            <View style={s.inputWrapper}>
               <Input
                 icon="mail-outline"
                 placeholder="E-mail"
@@ -100,11 +103,11 @@ export default function LoginScreen() {
                 }}
               />
               {Platform.OS === 'web' && emailError && (
-                <Text style={styles.errorText}>Preencha o e-mail.</Text>
+                <Text style={s.errorText}>Preencha o e-mail.</Text>
               )}
             </View>
 
-            <View style={styles.inputWrapper}>
+            <View style={s.inputWrapper}>
               <Input
                 ref={passwordRef}
                 icon="lock-closed-outline"
@@ -121,28 +124,28 @@ export default function LoginScreen() {
                 }}
               />
               {Platform.OS === 'web' && passwordError && (
-                <Text style={styles.errorText}>Preencha a senha.</Text>
+                <Text style={s.errorText}>Preencha a senha.</Text>
               )}
             </View>
 
             <TouchableOpacity
               onPress={() => router.push('/(auth)/recuperar-senha')}
-              style={styles.forgotButton}
+              style={s.forgotButton}
               accessibilityRole="link"
             >
-              <Text style={styles.forgotText}>Esqueci minha senha</Text>
+              <Text style={s.forgotText}>Esqueci minha senha</Text>
             </TouchableOpacity>
 
             <Button title="Entrar" onPress={handleLogin} loading={isLoading} />
           </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Não tem conta? </Text>
+          <View style={s.footer}>
+            <Text style={s.footerText}>Não tem conta? </Text>
             <TouchableOpacity
               onPress={() => router.push('/(auth)/cadastro')}
               accessibilityRole="link"
             >
-              <Text style={styles.footerLink}>Cadastrar</Text>
+              <Text style={s.footerLink}>Cadastrar</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -151,10 +154,10 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: ThemeColors) => StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -167,7 +170,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   webCard: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 32,
     shadowColor: '#000',
@@ -183,7 +186,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: theme.colors.textLight,
+    color: colors.textLight,
     marginTop: 10,
   },
   form: {
@@ -196,7 +199,7 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     fontSize: 14,
-    color: theme.colors.primary,
+    color: colors.primary,
     fontWeight: '500',
   },
   footer: {
@@ -206,11 +209,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: theme.colors.textLight,
+    color: colors.textLight,
   },
   footerLink: {
     fontSize: 14,
-    color: theme.colors.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   inputWrapper: {
