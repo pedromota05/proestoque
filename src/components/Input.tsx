@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { forwardRef, useState } from 'react';
 import {
   View,
   TextInput,
@@ -16,73 +16,76 @@ interface InputProps extends TextInputProps {
   isPassword?: boolean;
 }
 
-export function Input({ icon, error, isPassword = false, style, multiline, onFocus, onBlur, ...rest }: InputProps) {
-  const [isSecure, setIsSecure] = useState(isPassword);
-  const [isFocused, setIsFocused] = useState(false);
+export const Input = forwardRef<TextInput, InputProps>(
+  ({ icon, error, isPassword = false, style, multiline, onFocus, onBlur, ...rest }, ref) => {
+    const [isSecure, setIsSecure] = useState(isPassword);
+    const [isFocused, setIsFocused] = useState(false);
 
-  const toggleSecure = () => setIsSecure((prev) => !prev);
+    const toggleSecure = () => setIsSecure((prev) => !prev);
 
-  return (
-    <View style={styles.wrapper}>
-      <View
-        style={[
-          styles.container,
-          isFocused && !error && styles.containerFocused,
-          error ? styles.containerError : null,
-          multiline && styles.containerMultiline,
-        ]}
-      >
-        {icon && (
-          <Ionicons
-            name={icon}
-            size={20}
-            color={error ? theme.colors.error : isFocused ? theme.colors.primary : theme.colors.textLight}
-            style={[styles.icon, multiline && { alignSelf: 'flex-start', marginTop: 14 }]}
-          />
-        )}
-
-        <TextInput
+    return (
+      <View style={styles.wrapper}>
+        <View
           style={[
-            styles.input,
-            { outlineStyle: 'none' as any },
-            multiline && styles.inputMultiline,
-            style,
+            styles.container,
+            isFocused && !error && styles.containerFocused,
+            error ? styles.containerError : null,
+            multiline && styles.containerMultiline,
           ]}
-          placeholderTextColor={theme.colors.textLight}
-          secureTextEntry={isSecure}
-          accessibilityLabel={rest.placeholder}
-          multiline={multiline}
-          onFocus={(e) => {
-            setIsFocused(true);
-            if (onFocus) onFocus(e);
-          }}
-          onBlur={(e) => {
-            setIsFocused(false);
-            if (onBlur) onBlur(e);
-          }}
-          {...rest}
-        />
-
-        {isPassword && (
-          <TouchableOpacity
-            onPress={toggleSecure}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            accessibilityLabel={isSecure ? 'Mostrar senha' : 'Ocultar senha'}
-            accessibilityRole="button"
-          >
+        >
+          {icon && (
             <Ionicons
-              name={isSecure ? 'eye-off-outline' : 'eye-outline'}
+              name={icon}
               size={20}
-              color={theme.colors.textLight}
+              color={error ? theme.colors.error : isFocused ? theme.colors.primary : theme.colors.textLight}
+              style={[styles.icon, multiline && { alignSelf: 'flex-start', marginTop: 14 }]}
             />
-          </TouchableOpacity>
-        )}
-      </View>
+          )}
 
-      {typeof error === 'string' && error ? <Text style={styles.errorText}>{error}</Text> : null}
-    </View>
-  );
-}
+          <TextInput
+            ref={ref}
+            style={[
+              styles.input,
+              { outlineStyle: 'none' as any },
+              multiline && styles.inputMultiline,
+              style,
+            ]}
+            placeholderTextColor={theme.colors.textLight}
+            secureTextEntry={isSecure}
+            accessibilityLabel={rest.placeholder}
+            multiline={multiline}
+            onFocus={(e) => {
+              setIsFocused(true);
+              if (onFocus) onFocus(e);
+            }}
+            onBlur={(e) => {
+              setIsFocused(false);
+              if (onBlur) onBlur(e);
+            }}
+            {...rest}
+          />
+
+          {isPassword && (
+            <TouchableOpacity
+              onPress={toggleSecure}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityLabel={isSecure ? 'Mostrar senha' : 'Ocultar senha'}
+              accessibilityRole="button"
+            >
+              <Ionicons
+                name={isSecure ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color={theme.colors.textLight}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {typeof error === 'string' && error ? <Text style={styles.errorText}>{error}</Text> : null}
+      </View>
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   wrapper: {

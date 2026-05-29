@@ -1,4 +1,4 @@
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Redirect, Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
@@ -13,19 +13,6 @@ import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 function NavigationGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    const inAuthGroup = segments[0] === '(auth)';
-
-    if (!isAuthenticated && !inAuthGroup) {
-      router.replace('/(auth)/login');
-    } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/(tabs)');
-    }
-  }, [isAuthenticated, isLoading, segments, router]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -36,6 +23,18 @@ function NavigationGuard({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return <SplashScreen />;
+  }
+
+  const inAuthGroup = segments[0] === '(auth)';
+
+  // Usuário NÃO autenticado tentando acessar rota protegida → redireciona para login
+  if (!isAuthenticated && !inAuthGroup) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+  // Usuário autenticado tentando acessar rota de auth → redireciona para tabs
+  if (isAuthenticated && inAuthGroup) {
+    return <Redirect href="/(tabs)" />;
   }
 
   return <>{children}</>;

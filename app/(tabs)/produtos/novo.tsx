@@ -40,6 +40,7 @@ export default function NovoProdutoScreen() {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<ProdutoFormData>({
     resolver: zodResolver(produtoSchema),
@@ -74,6 +75,8 @@ export default function NovoProdutoScreen() {
         text2: 'Novo produto adicionado ao estoque.',
         position: 'top',
       });
+      reset();
+      setPrecoTexto('');
       router.back();
     } catch (error: any) {
       console.error('Erro ao salvar:', error);

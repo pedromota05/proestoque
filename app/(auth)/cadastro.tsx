@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
+  TextInput as RNTextInput,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -24,6 +25,9 @@ export default function CadastroScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const emailRef = useRef<RNTextInput>(null);
+  const passwordRef = useRef<RNTextInput>(null);
+  const confirmPasswordRef = useRef<RNTextInput>(null);
 
   const passwordMismatch =
     confirmPassword.length > 0 && password !== confirmPassword;
@@ -93,34 +97,48 @@ export default function CadastroScreen() {
                 autoCapitalize="words"
                 value={name}
                 style={{ outlineStyle: 'none' as any }}
+                returnKeyType="next"
+                onSubmitEditing={() => emailRef.current?.focus()}
+                blurOnSubmit={false}
                 onChangeText={setName}
               />
 
               <Input
+                ref={emailRef}
                 icon="mail-outline"
                 placeholder="E-mail"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
                 style={{ outlineStyle: 'none' as any }}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                blurOnSubmit={false}
                 onChangeText={setEmail}
               />
 
               <Input
+                ref={passwordRef}
                 icon="lock-closed-outline"
                 placeholder="Senha"
                 isPassword
                 value={password}
                 style={{ outlineStyle: 'none' as any }}
+                returnKeyType="next"
+                onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+                blurOnSubmit={false}
                 onChangeText={setPassword}
               />
 
               <Input
+                ref={confirmPasswordRef}
                 icon="lock-closed-outline"
                 placeholder="Confirmar senha"
                 isPassword
                 value={confirmPassword}
                 style={{ outlineStyle: 'none' as any }}
+                returnKeyType="send"
+                onSubmitEditing={handleCreateAccount}
                 onChangeText={setConfirmPassword}
                 error={passwordMismatch ? 'As senhas não coincidem' : undefined}
               />

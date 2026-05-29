@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
+  TextInput as RNTextInput,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -22,6 +23,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState(false);
+  const passwordRef = useRef<RNTextInput>(null);
   const [passwordError, setPasswordError] = useState(false);
 
   const handleLogin = async () => {
@@ -89,6 +91,9 @@ export default function LoginScreen() {
                 value={email}
                 error={Platform.OS === 'web' && emailError}
                 style={{ outlineStyle: 'none' as any }}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                blurOnSubmit={false}
                 onChangeText={(text) => {
                   setEmail(text);
                   setEmailError(false);
@@ -101,12 +106,15 @@ export default function LoginScreen() {
 
             <View style={styles.inputWrapper}>
               <Input
+                ref={passwordRef}
                 icon="lock-closed-outline"
                 placeholder="Senha"
                 isPassword
                 value={password}
                 error={Platform.OS === 'web' && passwordError}
                 style={{ outlineStyle: 'none' as any }}
+                returnKeyType="send"
+                onSubmitEditing={handleLogin}
                 onChangeText={(text) => {
                   setPassword(text);
                   setPasswordError(false);
