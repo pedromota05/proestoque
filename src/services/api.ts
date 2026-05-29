@@ -9,8 +9,11 @@ const STORAGE_KEYS = {
   USER: '@proestoque:user',
 } as const;
 
-// Utiliza a variável de ambiente se estiver definida, senão cai nos fallbacks originais.
 const getBaseUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
   if (Constants.expoConfig?.extra?.apiUrl) {
     return Constants.expoConfig.extra.apiUrl;
   }
@@ -19,10 +22,8 @@ const getBaseUrl = () => {
     return 'http://localhost:3333/api';
   }
   if (Platform.OS === 'android') {
-    // 10.0.2.2 é o alias do Android Emulator para o localhost do host
     return 'http://10.0.2.2:3333/api';
   }
-  // iOS Simulator pode usar localhost diretamente
   return 'http://localhost:3333/api';
 };
 
