@@ -31,7 +31,7 @@ const BASE_URL = getBaseUrl();
 
 export const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
+  timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 });
 

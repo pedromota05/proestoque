@@ -35,11 +35,18 @@ export function ImagePickerField({ value, onChange }: ImagePickerFieldProps) {
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.7,
+      quality: 0.5,
+      base64: true,
     });
 
     if (!result.canceled && result.assets[0]) {
-      onChange(result.assets[0].uri);
+      const asset = result.assets[0];
+      if (asset.base64) {
+        const mimeType = asset.mimeType || 'image/jpeg';
+        onChange(`data:${mimeType};base64,${asset.base64}`);
+      } else {
+        onChange(asset.uri);
+      }
     }
   }
 
@@ -57,11 +64,18 @@ export function ImagePickerField({ value, onChange }: ImagePickerFieldProps) {
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.7,
+      quality: 0.5,
+      base64: true,
     });
 
     if (!result.canceled && result.assets[0]) {
-      onChange(result.assets[0].uri);
+      const asset = result.assets[0];
+      if (asset.base64) {
+        const mimeType = asset.mimeType || 'image/jpeg';
+        onChange(`data:${mimeType};base64,${asset.base64}`);
+      } else {
+        onChange(asset.uri);
+      }
     }
   }
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Image, StyleSheet } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
+import { useTheme } from '../contexts/ThemeContext';
 
 const logoSource = require('../../assets/images/logo.png');
 
@@ -17,18 +18,32 @@ const sizeMap: Record<LogoSize, { width: number; height: number }> = {
 
 export function LogoProEstoque({ size = 'md' }: LogoProEstoqueProps) {
   const dimensions = sizeMap[size];
+  const { isDark } = useTheme();
 
   return (
-    <Image
-      source={logoSource}
-      style={[styles.logo, dimensions]}
-      resizeMode="contain"
-      accessibilityLabel="Logo ProEstoque"
-    />
+    <View style={[styles.container, isDark && styles.darkContainer]}>
+      <Image
+        source={logoSource}
+        style={[styles.logo, dimensions]}
+        resizeMode="contain"
+        accessibilityLabel="Logo ProEstoque"
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  darkContainer: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
   logo: {
     alignSelf: 'center',
   },

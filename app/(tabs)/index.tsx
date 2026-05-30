@@ -378,7 +378,7 @@ export default function HomeScreen() {
 
   if ((isLoading || isLoadingCategorias) && produtos.length === 0) {
     return (
-      <SafeAreaView style={s.safe}>
+      <SafeAreaView style={s.safe} edges={['top']}>
         {ListHeader}
         <ProdutoListaSkeleton count={3} />
       </SafeAreaView>
@@ -390,7 +390,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={s.safe} edges={['top']}>
       <FlatList
         style={{ flex: 1 }}
         data={produtosRecentes}
@@ -399,7 +399,7 @@ export default function HomeScreen() {
         ListHeaderComponent={ListHeader}
         ListFooterComponent={
           isWeb ? (
-            <View style={{ flexGrow: 1, justifyContent: 'flex-end' }}>
+            <View style={{ flexGrow: 1, justifyContent: 'flex-end', paddingTop: 40 }}>
               <WebFooter />
             </View>
           ) : undefined
@@ -427,7 +427,7 @@ const styles = (colors: ThemeColors) => StyleSheet.create({
     backgroundColor: colors.background,
   },
   listContent: {
-    paddingBottom: 0,
+    paddingBottom: isWeb ? 0 : 16,
     flexGrow: 1,
   },
   itemWrapper: {

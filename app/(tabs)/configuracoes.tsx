@@ -189,6 +189,7 @@ export default function ConfiguracoesScreen() {
             <DangerButton onPress={handleLogout} colors={colors} />
           </View>
         </View>
+        {isWeb && <WebFooter />}
       </ScrollView>
 
       {/* Modal de Tema */}
@@ -239,8 +240,6 @@ export default function ConfiguracoesScreen() {
           </View>
         </Pressable>
       </Modal>
-
-      {isWeb && <WebFooter />}
     </SafeAreaView>
   );
 }
@@ -256,7 +255,7 @@ const styles = (colors: ThemeColors) => StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 40,
+    paddingBottom: isWeb ? 0 : 40,
   },
   innerContainer: {
     flex: 1,
@@ -373,6 +372,7 @@ const styles = (colors: ThemeColors) => StyleSheet.create({
   logoutSection: {
     marginTop: 'auto' as any,
     paddingTop: 20,
+    paddingBottom: 40,
     alignItems: 'center',
   },
   dangerButton: {

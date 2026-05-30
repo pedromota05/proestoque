@@ -86,6 +86,9 @@ function ProdutoCard({
   const status = getStatusEstoque(produto);
   const config = getStatusConfig(status, colors);
   const icone = getCategoriaIcone(produto.categoriaId, categorias);
+  const [imageError, setImageError] = useState(false);
+
+  const showImage = produto.foto && !imageError;
 
   return (
     <TouchableOpacity
@@ -96,7 +99,7 @@ function ProdutoCard({
         layoutColuna && s.produtoCardColuna,
       ]}
     >
-      {produto.foto ? (
+      {showImage ? (
         <Image
           source={{ uri: produto.foto }}
           style={[
@@ -104,6 +107,7 @@ function ProdutoCard({
             !layoutColuna && s.iconeRow,
             layoutColuna && s.iconeColuna,
           ]}
+          onError={() => setImageError(true)}
         />
       ) : (
         <View
@@ -412,7 +416,7 @@ export default function ProdutosScreen() {
   );
 
   const listFooter = isWeb ? (
-    <View style={{ flexGrow: 1, justifyContent: 'flex-end' }}>
+    <View style={{ flexGrow: 1, justifyContent: 'flex-end', paddingTop: 40 }}>
       <WebFooter />
     </View>
   ) : (

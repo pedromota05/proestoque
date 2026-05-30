@@ -6,10 +6,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { ProductsProvider } from '../src/contexts/ProductsContext';
 import { solicitarPermissaoNotificacoes, agendarVerificacaoDiaria } from '../src/services/notifications';
-import { SplashScreen } from '../src/components/SplashScreen';
+import * as SplashScreen from 'expo-splash-screen';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { ThemeProvider, useTheme } from '../src/contexts/ThemeContext';
 import { ThemeColors } from '../src/constants/theme';
+
+// Impede que a splash nativa desapareça automaticamente
+SplashScreen.preventAutoHideAsync();
 
 function NavigationGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isInitializing } = useAuth();
@@ -23,8 +26,14 @@ function NavigationGuard({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    if (!isInitializing) {
+      SplashScreen.hideAsync();
+    }
+  }, [isInitializing]);
+
   if (isInitializing) {
-    return <SplashScreen />;
+    return null;
   }
 
   const inAuthGroup = segments[0] === '(auth)';

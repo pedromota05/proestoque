@@ -49,10 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function restoreSession() {
       try {
-        const [storageResults] = await Promise.all([
-          AsyncStorage.multiGet([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER, STORAGE_KEYS.REFRESH_TOKEN]),
-          new Promise((resolve) => setTimeout(resolve, 1500)),
-        ]);
+        const storageResults = await AsyncStorage.multiGet([STORAGE_KEYS.TOKEN, STORAGE_KEYS.USER, STORAGE_KEYS.REFRESH_TOKEN]);
 
         const tokenRecord = storageResults?.find((item) => item[0] === STORAGE_KEYS.TOKEN);
         const storedToken = tokenRecord ? tokenRecord[1] : null;

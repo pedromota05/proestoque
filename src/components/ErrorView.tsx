@@ -33,6 +33,7 @@ const styles = (colors: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
+    backgroundColor: colors.background,
   },
   title: {
     marginTop: 16,
