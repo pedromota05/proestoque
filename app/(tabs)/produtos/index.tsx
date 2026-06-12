@@ -449,6 +449,7 @@ export default function ProdutosScreen() {
     <SafeAreaView style={s.safe} edges={['top']}>
       {modoVisualizacao === 'grade' ? (
         <FlatList
+          testID="flatlist-produtos"
           style={{ flex: 1 }}
           data={produtosFiltrados}
           renderItem={renderGradeItem}
@@ -465,6 +466,7 @@ export default function ProdutosScreen() {
         />
       ) : (
         <SectionList
+          testID="sectionlist-produtos"
           style={{ flex: 1 }}
           sections={secoesAgrupadas}
           keyExtractor={keyExtractor}

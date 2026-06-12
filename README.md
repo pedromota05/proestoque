@@ -141,3 +141,55 @@ proestoque/
  ├── assets/                   # Mídia, Fontes e Ícones
  └── app.json                  # Configuração de Build do Expo
 ```
+
+---
+
+## 🧪 Testes Automatizados (Jest & Testing Library)
+
+O projeto conta com uma suíte de **53 testes automatizados** construída com **Jest** (via `jest-expo`) e **@testing-library/react-native**, garantindo a confiabilidade das regras de negócio, dos componentes visuais e dos hooks customizados.
+
+### Como executar os testes
+
+```bash
+# Rodar todos os testes uma única vez
+npm test
+
+# Rodar em modo watch (re-executa ao salvar arquivos)
+npm run test:watch
+
+# Gerar relatório de cobertura de código
+npm run test:coverage
+```
+
+> Após executar `npm run test:coverage`, o relatório detalhado estará disponível em `coverage/lcov-report/index.html`.
+
+### O que foi coberto
+
+| Categoria | Arquivo de teste | Testes | Descrição |
+|---|---|:---:|---|
+| **Funções puras (utils)** | `formatters.test.ts` | 15 | Testes para `formatCurrency`, `calcularValorTotal` e `estoqueBaixo`, incluindo edge cases com valores zero e negativos. |
+| **Hooks customizados** | `useEstoque.test.ts` | 6 | Validação dos indicadores calculados (`valorTotal`, `produtosBaixoEstoque`, `totalItens`) usando `renderHook`, incluindo cenário com lista vazia. |
+| **Componentes visuais** | `ProductCard.test.tsx` | 7 | Renderização de props, exibição condicional do alerta de estoque baixo, e callback `onEditar` via `fireEvent.press`. |
+| **Componentes visuais** | `ProdutoSkeleton.test.tsx` | 9 | Testes que garantem o funcionamento correto de toda a lógica condicional de layouts de linha e coluna (`layoutColuna`), validação de tamanhos das listas e comportamentos vazios de loading. |
+| **Componentes web** | `WebFooter.test.tsx` | 4 | Validação de renderização de conteúdo do rodapé de web, com testes de botões (clique sem quebra) e atributos de acessibilidade. |
+| **Tela assíncrona (HTTP)** | `ListaProdutos.test.tsx` | 12 | Simulação completa dos fluxos de tela: loading, fetch e renderização de listas, Empty States, botão de falha da API ("Tentar Novamente"), uso do Pull-to-Refresh (`onRefresh`), simulação do Toggle de Grade vs Agrupado e filtragem visual (`chips`). |
+
+### Métricas de Cobertura
+
+> ✅ **Meta da disciplina: ≥ 70% de cobertura nas pastas `src/utils` e `src/hooks`** — alcançamos **100%** em ambas.
+> 🏆 **Cobertura Global**: Evoluímos o projeto de 78.33% para **95.83%** de cobertura global em nosso refatoramento!
+
+| Métrica | `src/utils/` | `src/hooks/` | `src/components/` | **Global** |
+|---|:---:|:---:|:---:|:---:|
+| **Statements** | 100% | 100% | 100% | **95.83%** |
+| **Branches** | 100% | 100% | 92.30% | **84.84%** |
+| **Functions** | 100% | 100% | 100% | **92.53%** |
+| **Lines** | 100% | 100% | 100% | **95.83%** |
+
+### Resultado Final
+
+```
+Test Suites: 6 passed, 6 total
+Tests:       53 passed, 53 total
+Snapshots:   0 total
+```
